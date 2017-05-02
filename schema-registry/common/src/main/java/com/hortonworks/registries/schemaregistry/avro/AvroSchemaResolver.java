@@ -24,6 +24,7 @@ import com.hortonworks.registries.schemaregistry.errors.CyclicSchemaDependencyEx
 import com.hortonworks.registries.schemaregistry.errors.InvalidSchemaException;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import org.apache.avro.Schema;
+import org.codehaus.jackson.node.NullNode;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -187,8 +188,12 @@ public class AvroSchemaResolver implements SchemaResolver {
             case RECORD:
                 complexTypes.put(schema.getFullName(), schema);
                 List<Schema.Field> fields = schema.getFields();
+                //update union fields
+                updateUnionFields(schema);
+
                 for (Schema.Field field : fields) {
-                    collectComplexTypes(field.schema(), complexTypes);
+                    Schema fieldSchema = field.schema();
+                    collectComplexTypes(fieldSchema, complexTypes);
                 }
                 break;
             case ARRAY:
@@ -207,6 +212,27 @@ public class AvroSchemaResolver implements SchemaResolver {
                 collectComplexTypes(schema.getValueType(), complexTypes);
                 break;
             default:
+        }
+    }
+
+    private void updateUnionFields(Schema schema) {
+        List<Schema.Field> fields = schema.getFields();
+        boolean hasUnionType = false;
+        List<Schema.Field> updatedFields = new ArrayList<>(fields.size());
+        for (Schema.Field field : fields) {
+            Schema fieldSchema = field.schema();
+            Schema.Field updatedField = field;
+            // if it is union and first type is null then set default value as null
+            if(fieldSchema.getType() == Schema.Type.UNION &&
+                    fieldSchema.getTypes().get(0).getType() == Schema.Type.NULL) {
+                updatedField = new Schema.Field(field.name(), fieldSchema, field.doc(), NullNode.getInstance(), field.order());
+                hasUnionType = true;
+            }
+            updatedFields.add(updatedField);
+        }
+
+        if(hasUnionType) {
+            schema.setFields(updatedFields);
         }
     }
 

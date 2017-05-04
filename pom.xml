@@ -99,7 +99,7 @@
 
     <scm>
         <connection>scm:git:git://github.com/hortonworks/registry.git</connection>
-        <developerConnection>scm:git:git@github.com:harshach/registry.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:hortonworks/registry.git</developerConnection>
         <url>http://github.com/hortonworks/registry.git</url>
         <tag>HEAD</tag>
     </scm>
@@ -188,6 +188,23 @@
         </profile>
         <profile>
           <id>sonatype-nexus-staging</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>2.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
           <activation>
             <activeByDefault>false</activeByDefault>
           </activation>
@@ -197,6 +214,23 @@
         </profile>
         <profile>
           <id>sonatype-nexus-snapshots</id>
+            <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+            </build>
           <activation>
             <activeByDefault>false</activeByDefault>
           </activation>
@@ -624,19 +658,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-source-plugin</artifactId>
-              <version>2.2.1</version>
-              <executions>
-                <execution>
-                  <id>attach-sources</id>
-                  <goals>
-                    <goal>jar-no-fork</goal>
-                  </goals>
-                </execution>
-              </executions>
             </plugin>
             <plugin>
               <groupId>org.sonatype.plugins</groupId>

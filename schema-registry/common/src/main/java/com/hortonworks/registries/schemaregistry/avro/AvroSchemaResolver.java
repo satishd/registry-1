@@ -26,7 +26,9 @@ import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import org.apache.avro.Schema;
 import org.codehaus.jackson.node.NullNode;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -124,14 +126,17 @@ public class AvroSchemaResolver implements SchemaResolver {
     private String getResultantSchema(String schemaText, Map<String, SchemaParsingState> schemaParsingStates)
             throws InvalidSchemaException, SchemaNotFoundException {
         Map<String, Schema> schemaTypes = getIncludedSchemaTypes(schemaText, schemaParsingStates);
-        if (schemaTypes == null || schemaTypes.isEmpty()) {
-            return schemaText;
-        }
+
+        // remove this check..
+//        if (schemaTypes == null || schemaTypes.isEmpty()) {
+//            return schemaText;
+//        }
 
         Schema.Parser parser = new Schema.Parser();
         parser.addTypes(schemaTypes);
         Schema schema = parser.parse(schemaText);
 
+        // if it is not modified then return the same schema
         return schema.toString();
     }
 

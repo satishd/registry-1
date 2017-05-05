@@ -26,71 +26,70 @@ import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import org.apache.avro.Schema;
 import org.codehaus.jackson.node.NullNode;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.avro.Schema.Type.RECORD;
+
 /**
  * Avro implementation of {@link SchemaResolver} which resolves all the dependent schemas and builds an effective schema.
- *
+ * <p>
  * List of dependent schemas can be added with `includeSchemas` attribute in avro schema. This contains name and version
  * of each schema as mentioned below.
  * - name       : unique name of that schema in schema registry which is {@link com.hortonworks.registries.schemaregistry.SchemaMetadata#name}.
  * - version    : version number of the schema being used which is {@link SchemaVersionKey#version}.
- *                When this property is not mentioned then it is considered to be latest version of that schema when
- *                it builds effective schema.
- *
+ * When this property is not mentioned then it is considered to be latest version of that schema when
+ * it builds effective schema.
+ * <p>
  * Example of Avro schema containing dependencies is given below.
- *
+ * <p>
  * account schema:
  * <pre> {@code
  *
-    {
-        "name": "account",
-        "namespace": "com.hortonworks.types",
-        "includeSchemas": [
-            {
-                "name": "utils",
-                "version": "2",
-            }
-        ],
-        "type": "record",
-        "fields": [
-            {
-                "name": "name",
-                "type": "string"
-            },
-            {
-                "name": "id",
-                "type": "com.hortonworks.datatypes.uuid"
-            }
-        ]
-    }
+ * {
+ * "name": "account",
+ * "namespace": "com.hortonworks.types",
+ * "includeSchemas": [
+ * {
+ * "name": "utils",
+ * "version": "2",
+ * }
+ * ],
+ * "type": "record",
+ * "fields": [
+ * {
+ * "name": "name",
+ * "type": "string"
+ * },
+ * {
+ * "name": "id",
+ * "type": "com.hortonworks.datatypes.uuid"
+ * }
+ * ]
+ * }
  * }</pre>
- *
+ * <p>
  * dependent utils schema:
  * <pre> {@code
  * {
-     "name": "uuid",
-     "type": "record",
-     "namespace": "com.hortonworks.datatypes",
-     "doc": "A Universally Unique Identifier, in canonical form in lowercase. This is generated from java.util.UUID Example: de305d54-75b4-431b-adb2-eb6b9e546014",
-     "fields": [
-         {
-             "name": "value",
-             "type": "string",
-             "default": ""
-         }
-     ]
-   }
+ * "name": "uuid",
+ * "type": "record",
+ * "namespace": "com.hortonworks.datatypes",
+ * "doc": "A Universally Unique Identifier, in canonical form in lowercase. This is generated from java.util.UUID Example: de305d54-75b4-431b-adb2-eb6b9e546014",
+ * "fields": [
+ * {
+ * "name": "value",
+ * "type": "string",
+ * "default": ""
+ * }
+ * ]
+ * }
  *
  * }</pre>
- *
  */
 public class AvroSchemaResolver implements SchemaResolver {
 
@@ -125,23 +124,85 @@ public class AvroSchemaResolver implements SchemaResolver {
 
     private String getResultantSchema(String schemaText, Map<String, SchemaParsingState> schemaParsingStates)
             throws InvalidSchemaException, SchemaNotFoundException {
-        Map<String, Schema> schemaTypes = getIncludedSchemaTypes(schemaText, schemaParsingStates);
-
-        // remove this check..
-//        if (schemaTypes == null || schemaTypes.isEmpty()) {
-//            return schemaText;
-//        }
+        Map<String, Schema> complexTypes = traverseIncludedSchemaTypes(schemaText, schemaParsingStates);
 
         Schema.Parser parser = new Schema.Parser();
-        parser.addTypes(schemaTypes);
+        parser.addTypes(complexTypes);
         Schema schema = parser.parse(schemaText);
 
-        // if it is not modified then return the same schema
-        return schema.toString();
+        Schema updatedSchema = handleUnionFieldsWithNull(schema);
+
+        return schema == updatedSchema ? schemaText : updatedSchema.toString();
     }
 
-    private Map<String, Schema> getIncludedSchemaTypes(String schemaText,
-                                                       Map<String, SchemaParsingState> schemaParsingStates)
+    private Schema handleUnionFieldsWithNull(Schema schema) {
+        Schema updatedRootSchema = schema;
+        boolean fieldSchemaUpdated;
+        if (schema.getType() == RECORD) {
+            List<Schema.Field> fields = updatedRootSchema.getFields();
+            List<Schema.Field> updatedFields = new ArrayList<>(fields.size());
+            boolean hasUnionType;
+            for (Schema.Field field : fields) {
+                Schema fieldSchema = field.schema();
+                Schema.Field updatedField = field;
+                // check for union
+                if (fieldSchema.getType() == Schema.Type.UNION) {
+                    // check for the fields with in union
+                    
+                    Schema updatedFieldSchema = handleUnionFieldsWithNull(fieldSchema);
+                    // if it is union and first type is null then set default value as null
+                    if (fieldSchema.getTypes().get(0).getType() == Schema.Type.NULL) {
+                        updatedField = new Schema.Field(field.name(), fieldSchema, field.doc(), NullNode.getInstance(), field.order());
+                        hasUnionType = true;
+                    }
+                }
+
+                // check for non union
+                Schema updatedFieldSchema = handleUnionFieldsWithNull(fieldSchema);
+                if (fieldSchema != updatedFieldSchema) {
+                    fieldSchemaUpdated = true;
+
+                }
+                updatedFields.add(updatedField);
+            }
+        }
+
+        return updatedRootSchema;
+    }
+
+    private Schema updateUnionFields(Schema schema) {
+        Schema updatedSchema = schema;
+        List<Schema.Field> fields = schema.getFields();
+        boolean hasUnionType = false;
+        List<Schema.Field> updatedFields = new ArrayList<>(fields.size());
+        for (Schema.Field field : fields) {
+            Schema fieldSchema = field.schema();
+            Schema.Field updatedField = field;
+            // if it is union and first type is null then set default value as null
+            if (fieldSchema.getType() == Schema.Type.UNION &&
+                    fieldSchema.getTypes().get(0).getType() == Schema.Type.NULL) {
+                updatedField = new Schema.Field(field.name(), fieldSchema, field.doc(), NullNode.getInstance(), field.order());
+                hasUnionType = true;
+            }
+            updatedFields.add(updatedField);
+        }
+
+        if (hasUnionType) {
+            updatedSchema = Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(), schema.isError());
+            updatedSchema.setFields(updatedFields);
+            for (String alias : schema.getAliases()) {
+                updatedSchema.addAlias(alias);
+            }
+            for (Map.Entry<String, org.codehaus.jackson.JsonNode> nodeEntry : schema.getJsonProps().entrySet()) {
+                updatedSchema.addProp(nodeEntry.getKey(), nodeEntry.getValue());
+            }
+        }
+
+        return updatedSchema;
+    }
+
+    private Map<String, Schema> traverseIncludedSchemaTypes(String schemaText,
+                                                            Map<String, SchemaParsingState> schemaParsingStates)
             throws InvalidSchemaException, SchemaNotFoundException {
         List<SchemaVersionKey> includedSchemaVersions = getIncludedSchemaVersions(schemaText);
 
@@ -155,6 +216,7 @@ public class AvroSchemaResolver implements SchemaResolver {
                 schemaTypes.putAll(collectedSchemas);
             }
         }
+
         return schemaTypes;
     }
 
@@ -193,9 +255,6 @@ public class AvroSchemaResolver implements SchemaResolver {
             case RECORD:
                 complexTypes.put(schema.getFullName(), schema);
                 List<Schema.Field> fields = schema.getFields();
-                //update union fields
-                updateUnionFields(schema);
-
                 for (Schema.Field field : fields) {
                     Schema fieldSchema = field.schema();
                     collectComplexTypes(fieldSchema, complexTypes);
@@ -217,27 +276,6 @@ public class AvroSchemaResolver implements SchemaResolver {
                 collectComplexTypes(schema.getValueType(), complexTypes);
                 break;
             default:
-        }
-    }
-
-    private void updateUnionFields(Schema schema) {
-        List<Schema.Field> fields = schema.getFields();
-        boolean hasUnionType = false;
-        List<Schema.Field> updatedFields = new ArrayList<>(fields.size());
-        for (Schema.Field field : fields) {
-            Schema fieldSchema = field.schema();
-            Schema.Field updatedField = field;
-            // if it is union and first type is null then set default value as null
-            if(fieldSchema.getType() == Schema.Type.UNION &&
-                    fieldSchema.getTypes().get(0).getType() == Schema.Type.NULL) {
-                updatedField = new Schema.Field(field.name(), fieldSchema, field.doc(), NullNode.getInstance(), field.order());
-                hasUnionType = true;
-            }
-            updatedFields.add(updatedField);
-        }
-
-        if(hasUnionType) {
-            schema.setFields(updatedFields);
         }
     }
 

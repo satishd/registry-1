@@ -23,6 +23,7 @@ import mockit.Tested;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 import static mockit.Deencapsulation.invoke;
 
@@ -56,5 +57,16 @@ public class SchemaRegistryClientTest {
         schemaRegistryClient.addSchemaVersion(schemaMetaData, schemaVersion);
         schemaRegistryClient.addSchemaVersion(schemaMetaData, schemaVersion);
         schemaRegistryClient.addSchemaVersion(schemaName, schemaVersion);
+    }
+
+    @Test
+    public void foo() {
+        final Pattern KEY_PATTERN = Pattern.compile("^[\\w \\t\\.:_-]+$");
+        String[] keys = {"msg:kafka-中文reader-4-1483689231-stormconf.ser", "kafka-unicodewriter䶵"};
+        for (String key : keys) {
+            System.out.println("key = " + key);
+            boolean matches = KEY_PATTERN.matcher(key).matches();
+            System.out.println("matches = " + matches);
+        }
     }
 }

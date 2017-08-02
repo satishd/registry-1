@@ -19,6 +19,7 @@ import com.hortonworks.registries.schemaregistry.errors.IncompatibleSchemaExcept
 import com.hortonworks.registries.schemaregistry.errors.InvalidSchemaException;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import com.hortonworks.registries.schemaregistry.serde.SerDesException;
+import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -218,5 +219,25 @@ public interface ISchemaRegistryService {
      * @return Collection of Serializers registered for the schema with {@code schemaName}
      */
     Collection<SerDesInfo> getSerDes(String schemaName);
+
+    default void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        throw new UnsupportedOperationException();
+    }
+
+    default void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        throw new UnsupportedOperationException();
+    }
+
+    default void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException  {
+        throw new UnsupportedOperationException();
+    }
+
+    default void disableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        throw new UnsupportedOperationException();
+    }
+
+    default void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        throw new UnsupportedOperationException();
+    }
 
 }

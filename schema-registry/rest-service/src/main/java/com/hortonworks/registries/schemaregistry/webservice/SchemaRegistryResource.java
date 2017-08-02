@@ -38,6 +38,7 @@ import com.hortonworks.registries.schemaregistry.errors.IncompatibleSchemaExcept
 import com.hortonworks.registries.schemaregistry.errors.InvalidSchemaException;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import com.hortonworks.registries.schemaregistry.errors.UnsupportedSchemaTypeException;
+import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleException;
 import com.hortonworks.registries.storage.search.OrderBy;
 import com.hortonworks.registries.storage.search.WhereClause;
 import io.swagger.annotations.Api;
@@ -585,7 +586,7 @@ public class SchemaRegistryResource extends BaseRegistryResource {
 
     @GET
     @Path("/schemas/versionsById/{id}")
-    @ApiOperation(value = "Get a version of the schema identified by the schema name",
+    @ApiOperation(value = "Get a version of the schema identified by the given versionid",
             response = SchemaVersionInfo.class, tags = OPERATION_GROUP_SCHEMA)
     @Timed
     public Response getSchemaVersionById(@ApiParam(value = "version identifier of the schema", required = true) @PathParam("id") Long versionId) {
@@ -598,6 +599,133 @@ public class SchemaRegistryResource extends BaseRegistryResource {
         } catch (SchemaNotFoundException e) {
             LOG.info("No schema version is found with schema version id : [{}]", versionId);
             response = WSUtils.respond(Response.Status.NOT_FOUND, CatalogResponse.ResponseMessage.ENTITY_NOT_FOUND, versionId.toString());
+        } catch (Exception ex) {
+            LOG.error("Encountered error while getting schema version with id [{}]", versionId, ex);
+            response = WSUtils.respond(Response.Status.INTERNAL_SERVER_ERROR, CatalogResponse.ResponseMessage.EXCEPTION, ex.getMessage());
+        }
+
+        return response;
+    }
+
+
+    @POST
+    @Path("/schemas/versionsById/{id}/enable")
+    @ApiOperation(value = "Enables version of the schema identified by the given versionid",
+            response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
+    @Timed
+    public Response enableSchema(@ApiParam(value = "version identifier of the schema", required = true) @PathParam("id") Long versionId) {
+
+        Response response;
+        try {
+            schemaRegistry.enableSchemaVersion(versionId);
+            response = WSUtils.respondEntity(true, Response.Status.OK);
+        } catch (SchemaNotFoundException e) {
+            LOG.info("No schema version is found with schema version id : [{}]", versionId);
+            response = WSUtils.respond(Response.Status.NOT_FOUND, CatalogResponse.ResponseMessage.ENTITY_NOT_FOUND, versionId.toString());
+        } catch(SchemaLifeCycleException e) {
+            LOG.error("Encountered error while enabling schema version with id [{}]", versionId, e);
+            response = WSUtils.respond(Response.Status.BAD_REQUEST, CatalogResponse.ResponseMessage.BAD_REQUEST, e.getMessage());
+        }catch (Exception ex) {
+            LOG.error("Encountered error while getting schema version with id [{}]", versionId, ex);
+            response = WSUtils.respond(Response.Status.INTERNAL_SERVER_ERROR, CatalogResponse.ResponseMessage.EXCEPTION, ex.getMessage());
+        }
+
+        return response;
+    }
+
+    @POST
+    @Path("/schemas/versionsById/{id}/disable")
+    @ApiOperation(value = "Disables version of the schema identified by the given version id",
+            response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
+    @Timed
+    public Response disableSchema(@ApiParam(value = "version identifier of the schema", required = true) @PathParam("id") Long versionId) {
+
+        Response response;
+        try {
+            schemaRegistry.disableSchemaVersion(versionId);
+            response = WSUtils.respondEntity(true, Response.Status.OK);
+        } catch (SchemaNotFoundException e) {
+            LOG.info("No schema version is found with schema version id : [{}]", versionId);
+            response = WSUtils.respond(Response.Status.NOT_FOUND, CatalogResponse.ResponseMessage.ENTITY_NOT_FOUND, versionId.toString());
+        } catch(SchemaLifeCycleException e) {
+            LOG.error("Encountered error while disabling schema version with id [{}]", versionId, e);
+            response = WSUtils.respond(Response.Status.BAD_REQUEST, CatalogResponse.ResponseMessage.BAD_REQUEST, e.getMessage());
+        }catch (Exception ex) {
+            LOG.error("Encountered error while getting schema version with id [{}]", versionId, ex);
+            response = WSUtils.respond(Response.Status.INTERNAL_SERVER_ERROR, CatalogResponse.ResponseMessage.EXCEPTION, ex.getMessage());
+        }
+
+        return response;
+    }
+
+    @POST
+    @Path("/schemas/versionsById/{id}/archive")
+    @ApiOperation(value = "Disables version of the schema identified by the given version id",
+            response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
+    @Timed
+    public Response archiveSchema(@ApiParam(value = "version identifier of the schema", required = true) @PathParam("id") Long versionId) {
+
+        Response response;
+        try {
+            schemaRegistry.archiveSchemaVersion(versionId);
+            response = WSUtils.respondEntity(true, Response.Status.OK);
+        } catch (SchemaNotFoundException e) {
+            LOG.info("No schema version is found with schema version id : [{}]", versionId);
+            response = WSUtils.respond(Response.Status.NOT_FOUND, CatalogResponse.ResponseMessage.ENTITY_NOT_FOUND, versionId.toString());
+        } catch(SchemaLifeCycleException e) {
+            LOG.error("Encountered error while disabling schema version with id [{}]", versionId, e);
+            response = WSUtils.respond(Response.Status.BAD_REQUEST, CatalogResponse.ResponseMessage.BAD_REQUEST, e.getMessage());
+        }catch (Exception ex) {
+            LOG.error("Encountered error while getting schema version with id [{}]", versionId, ex);
+            response = WSUtils.respond(Response.Status.INTERNAL_SERVER_ERROR, CatalogResponse.ResponseMessage.EXCEPTION, ex.getMessage());
+        }
+
+        return response;
+    }
+
+
+    @POST
+    @Path("/schemas/versionsById/{id}/delete")
+    @ApiOperation(value = "Disables version of the schema identified by the given version id",
+            response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
+    @Timed
+    public Response deleteSchema(@ApiParam(value = "version identifier of the schema", required = true) @PathParam("id") Long versionId) {
+
+        Response response;
+        try {
+            schemaRegistry.deleteSchemaVersion(versionId);
+            response = WSUtils.respondEntity(true, Response.Status.OK);
+        } catch (SchemaNotFoundException e) {
+            LOG.info("No schema version is found with schema version id : [{}]", versionId);
+            response = WSUtils.respond(Response.Status.NOT_FOUND, CatalogResponse.ResponseMessage.ENTITY_NOT_FOUND, versionId.toString());
+        } catch(SchemaLifeCycleException e) {
+            LOG.error("Encountered error while disabling schema version with id [{}]", versionId, e);
+            response = WSUtils.respond(Response.Status.BAD_REQUEST, CatalogResponse.ResponseMessage.BAD_REQUEST, e.getMessage());
+        }catch (Exception ex) {
+            LOG.error("Encountered error while getting schema version with id [{}]", versionId, ex);
+            response = WSUtils.respond(Response.Status.INTERNAL_SERVER_ERROR, CatalogResponse.ResponseMessage.EXCEPTION, ex.getMessage());
+        }
+
+        return response;
+    }
+
+    @POST
+    @Path("/schemas/versionsById/{id}/startReview")
+    @ApiOperation(value = "Disables version of the schema identified by the given version id",
+            response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
+    @Timed
+    public Response startReviewSchema(@ApiParam(value = "version identifier of the schema", required = true) @PathParam("id") Long versionId) {
+
+        Response response;
+        try {
+            schemaRegistry.startSchemaVersionReview(versionId);
+            response = WSUtils.respondEntity(true, Response.Status.OK);
+        } catch (SchemaNotFoundException e) {
+            LOG.info("No schema version is found with schema version id : [{}]", versionId);
+            response = WSUtils.respond(Response.Status.NOT_FOUND, CatalogResponse.ResponseMessage.ENTITY_NOT_FOUND, versionId.toString());
+        } catch(SchemaLifeCycleException e) {
+            LOG.error("Encountered error while disabling schema version with id [{}]", versionId, e);
+            response = WSUtils.respond(Response.Status.BAD_REQUEST, CatalogResponse.ResponseMessage.BAD_REQUEST, e.getMessage());
         } catch (Exception ex) {
             LOG.error("Encountered error while getting schema version with id [{}]", versionId, ex);
             response = WSUtils.respond(Response.Status.INTERNAL_SERVER_ERROR, CatalogResponse.ResponseMessage.EXCEPTION, ex.getMessage());

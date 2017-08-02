@@ -16,6 +16,7 @@
 package com.hortonworks.registries.schemaregistry;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleStates;
 
 import java.io.Serializable;
 
@@ -56,18 +57,38 @@ public final class SchemaVersionInfo implements Serializable {
      * timestamp of the schema which is given in SchemaInfo
      */
     private Long timestamp;
-    
+
+    /**
+     * current stateId of this version.
+     */
+    private Byte stateId;
 
     @SuppressWarnings("unused")
     private SchemaVersionInfo() { /* Private constructor for Jackson JSON mapping */ }
 
-    public SchemaVersionInfo(Long id, String name, Integer version, String schemaText, Long timestamp, String description) {
+    public SchemaVersionInfo(Long id,
+                             String name,
+                             Integer version,
+                             String schemaText,
+                             Long timestamp,
+                             String description) {
+        this(id, name, version, schemaText, timestamp, description, null);
+    }
+
+    public SchemaVersionInfo(Long id,
+                             String name,
+                             Integer version,
+                             String schemaText,
+                             Long timestamp,
+                             String description,
+                             Byte stateId) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.version = version;
         this.schemaText = schemaText;
         this.timestamp = timestamp;
+        this.stateId = stateId == null ? SchemaLifeCycleStates.ENABLED.id() : stateId;
     }
 
     public Long getId() {
@@ -92,6 +113,10 @@ public final class SchemaVersionInfo implements Serializable {
 
     public Long getTimestamp() {
         return timestamp;
+    }
+
+    public Byte getStateId() {
+        return stateId;
     }
 
     @Override

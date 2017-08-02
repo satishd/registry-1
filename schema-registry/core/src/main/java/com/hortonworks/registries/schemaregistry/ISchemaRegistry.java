@@ -17,6 +17,7 @@ package com.hortonworks.registries.schemaregistry;
 
 import com.hortonworks.registries.schemaregistry.errors.InvalidSchemaException;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
+import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleContext;
 import com.hortonworks.registries.storage.search.OrderBy;
 import com.hortonworks.registries.storage.search.WhereClause;
 
@@ -61,15 +62,6 @@ public interface ISchemaRegistry extends ISchemaRegistryService {
      * @throws InvalidSchemaException  when the given {@code schemaText} is not valid.
      */
     SchemaVersionInfo getSchemaVersionInfo(String schemaName, String schemaText) throws SchemaNotFoundException, InvalidSchemaException;
-
-    /**
-     * @param id schema version id
-     *
-     * @return Returns {@link SchemaVersionInfo} for the given id.
-     *
-     * @throws SchemaNotFoundException when there is no version of schema with the given id.
-     */
-    SchemaVersionInfo getSchemaVersionInfo(Long id) throws SchemaNotFoundException;
 
     /**
      * @param props properties

@@ -78,7 +78,7 @@ public class ConfluentSchemaRegistryCompatibleResource extends BaseRegistryResou
     public Response getSchemaById(@ApiParam(value = "schema version id", required = true) @PathParam("id") Long id) {
         Response response;
         try {
-            SchemaVersionInfo schemaVersionInfo = schemaRegistry.getSchemaVersionInfo(id);
+            SchemaVersionInfo schemaVersionInfo = schemaRegistry.getSchemaVersionInfo(new SchemaIdVersion(id));
             SchemaString schema = new SchemaString();
             schema.setSchema(schemaVersionInfo.getSchemaText());
             response = WSUtils.respondEntity(schema, Response.Status.OK);
@@ -214,7 +214,7 @@ public class ConfluentSchemaRegistryCompatibleResource extends BaseRegistryResou
                 try {
                     Long id = Long.valueOf(versionId);
                     if (id > 0 && id <= Integer.MAX_VALUE) {
-                        fetchedSchemaVersionInfo = schemaRegistry.getSchemaVersionInfo(id);
+                        fetchedSchemaVersionInfo = schemaRegistry.getSchemaVersionInfo(new SchemaIdVersion(id));
                     } else {
                         LOG.error("versionId is not in valid range [{}, {}] ", 1, Integer.MAX_VALUE);
                     }

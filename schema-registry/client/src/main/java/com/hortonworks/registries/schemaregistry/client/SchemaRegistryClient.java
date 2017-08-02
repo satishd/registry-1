@@ -47,6 +47,7 @@ import com.hortonworks.registries.schemaregistry.serde.SnapshotSerializer;
 import com.hortonworks.registries.schemaregistry.serde.pull.PullDeserializer;
 import com.hortonworks.registries.schemaregistry.serde.pull.PullSerializer;
 import com.hortonworks.registries.schemaregistry.serde.push.PushDeserializer;
+import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleException;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
@@ -83,6 +84,7 @@ import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -611,6 +613,62 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        postSchemaVersionState(schemaVersionId, "enable");
+    }
+
+    @Override
+    public void disableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        postSchemaVersionState(schemaVersionId, "disable");
+    }
+
+    @Override
+    public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        postSchemaVersionState(schemaVersionId, "delete");
+    }
+
+    @Override
+    public void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        postSchemaVersionState(schemaVersionId, "archive");
+    }
+
+    @Override
+    public void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        postSchemaVersionState(schemaVersionId, "startReview");
+
+    }
+
+
+    private void postSchemaVersionState(Long schemaVersionId,
+                                        String operation) throws SchemaNotFoundException, SchemaLifeCycleException {
+        WebTarget webTarget = currentSchemaRegistryTargets().rootTarget.path("/schemas/versionsById/" + schemaVersionId + "/" + operation);
+        Response response = Subject.doAs(subject, new PrivilegedAction<Response>() {
+            @Override
+            public Response run() {
+                return webTarget.request().post(null);
+            }
+        });
+
+        boolean result = handleSchemaLifeCycleResponse(response);
+    }
+
+    private boolean handleSchemaLifeCycleResponse(Response response) throws SchemaNotFoundException, SchemaLifeCycleException {
+        boolean result = false;
+        int status = response.getStatus();
+        if(status == Response.Status.OK.getStatusCode()) {
+            result = response.readEntity(Boolean.class);
+        } else if(status == Response.Status.NOT_FOUND.getStatusCode()) {
+            throw new SchemaNotFoundException(response.readEntity(String.class));
+        } else if(status == Response.Status.BAD_REQUEST.getStatusCode()) {
+            throw new SchemaLifeCycleException(response.readEntity(String.class));
+        } else {
+            throw new RuntimeException(response.readEntity(String.class));
+        }
+
+        return result;
     }
 
     @Override

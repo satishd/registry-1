@@ -17,11 +17,14 @@
  */
 package com.hortonworks.registries.schemaregistry;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.Serializable;
 
 /**
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SerDesPair implements Serializable {
     private String name;
     private String description;

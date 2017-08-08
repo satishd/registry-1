@@ -15,6 +15,7 @@
  **/
 package com.hortonworks.registries.schemaregistry;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
@@ -24,6 +25,7 @@ import java.io.Serializable;
 /**
  * This class is about metadata of a schema which includes name, type, schemaGroup, description and compatibility.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SchemaMetadata implements Serializable {
 
     /**

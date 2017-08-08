@@ -15,11 +15,14 @@
  **/
 package com.hortonworks.registries.schemaregistry;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.Serializable;
 
 /**
  * This class represents details about versioned instance of a schema which includes description and schema text.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SchemaVersion implements Serializable {
     private String description;
     private String schemaText;

@@ -15,6 +15,7 @@
  **/
 package com.hortonworks.registries.schemaregistry;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
@@ -24,6 +25,7 @@ import java.io.Serializable;
  * There can be only one instance with the same name.
  * New versions of the schema can be registered for the given {@link SchemaMetadataInfo} by giving {@link SchemaVersion} instances.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class SchemaMetadataInfo implements Serializable {
 
     /**

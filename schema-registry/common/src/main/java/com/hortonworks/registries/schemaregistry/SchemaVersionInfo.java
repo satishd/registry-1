@@ -15,11 +15,14 @@
  **/
 package com.hortonworks.registries.schemaregistry;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.Serializable;
 
 /**
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class SchemaVersionInfo implements Serializable {
 
     /**

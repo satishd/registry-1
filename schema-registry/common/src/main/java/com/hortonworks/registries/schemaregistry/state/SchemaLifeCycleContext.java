@@ -15,6 +15,8 @@
  */
 package com.hortonworks.registries.schemaregistry.state;
 
+import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -24,11 +26,15 @@ import java.util.concurrent.ConcurrentMap;
 public class SchemaLifeCycleContext {
     private SchemaLifeCycleState state;
     private Long schemaVersionId;
+    private Integer sequence;
     private SchemaVersionService schemaVersionService;
     private ConcurrentMap<String, Object> props = new ConcurrentHashMap<>();
 
-    public SchemaLifeCycleContext(Long schemaVersionId, SchemaVersionService schemaVersionService) {
+    public SchemaLifeCycleContext(Long schemaVersionId,
+                                  Integer sequence,
+                                  SchemaVersionService schemaVersionService) {
         this.schemaVersionId = schemaVersionId;
+        this.sequence = sequence;
         this.schemaVersionService = schemaVersionService;
     }
 
@@ -44,6 +50,10 @@ public class SchemaLifeCycleContext {
         return schemaVersionId;
     }
 
+    public Integer getSequence() {
+        return sequence;
+    }
+
     public SchemaVersionService getSchemaVersionService() {
         return schemaVersionService;
     }
@@ -56,7 +66,7 @@ public class SchemaLifeCycleContext {
         return props.put(key, value);
     }
 
-    public void updateSchemaVersionState() throws SchemaLifeCycleException {
+    public void updateSchemaVersionState() throws SchemaLifeCycleException, SchemaNotFoundException {
         schemaVersionService.updateSchemaVersionState(this);
     }
 

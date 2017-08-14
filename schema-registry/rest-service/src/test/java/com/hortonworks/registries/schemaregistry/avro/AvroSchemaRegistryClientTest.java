@@ -41,6 +41,7 @@ import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import com.hortonworks.registries.schemaregistry.serdes.avro.AvroSnapshotDeserializer;
 import com.hortonworks.registries.schemaregistry.serdes.avro.AvroSnapshotSerializer;
 import com.hortonworks.registries.schemaregistry.serdes.avro.SerDesProtocolHandlerRegistry;
+import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleStates;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -435,4 +436,35 @@ public class AvroSchemaRegistryClientTest {
         SCHEMA_REGISTRY_CLIENT.deleteSchemaVersion(schemaVersionKey);
     }
 
+    @Test
+    public void testSchemaVersionEnableState() throws Exception {
+        String schema = AvroSchemaRegistryClientUtil.getSchema("/device.avsc");
+        String incompatSchema = AvroSchemaRegistryClientUtil.getSchema("/device-compat.avsc");
+
+        SchemaMetadata schemaMetadata = createSchemaMetadata(TEST_NAME_RULE.getMethodName(), SchemaCompatibility.BACKWARD);
+
+        // registering a new schema
+        SchemaIdVersion schemaIdVersion_1 = SCHEMA_REGISTRY_CLIENT.addSchemaVersion(schemaMetadata, new SchemaVersion(schema, "Initial version of the schema"));
+
+        // adding a new version of the schema
+        SchemaVersion incompatSchemaInfo = new SchemaVersion(incompatSchema, "second version");
+        SchemaIdVersion schemaIdVersion_2 = SCHEMA_REGISTRY_CLIENT.addSchemaVersion(schemaMetadata, incompatSchemaInfo);
+
+        SCHEMA_REGISTRY_CLIENT.disableSchemaVersion(schemaIdVersion_2.getSchemaVersionId());
+        SchemaVersionInfo schemaVersionInfo = SCHEMA_REGISTRY_CLIENT.getSchemaVersionInfo(schemaIdVersion_2);
+        Assert.assertEquals(SchemaLifeCycleStates.DISABLED.id(), schemaVersionInfo.getStateId().byteValue());
+
+        SCHEMA_REGISTRY_CLIENT.enableSchemaVersion(schemaIdVersion_2.getSchemaVersionId());
+        schemaVersionInfo = SCHEMA_REGISTRY_CLIENT.getSchemaVersionInfo(schemaIdVersion_2);
+        Assert.assertEquals(SchemaLifeCycleStates.ENABLED.id(), schemaVersionInfo.getStateId().byteValue());
+
+
+        SCHEMA_REGISTRY_CLIENT.disableSchemaVersion(schemaIdVersion_2.getSchemaVersionId());
+        schemaVersionInfo = SCHEMA_REGISTRY_CLIENT.getSchemaVersionInfo(schemaIdVersion_2);
+        Assert.assertEquals(SchemaLifeCycleStates.DISABLED.id(), schemaVersionInfo.getStateId().byteValue());
+
+        SCHEMA_REGISTRY_CLIENT.archiveSchemaVersion(schemaIdVersion_2.getSchemaVersionId());
+        schemaVersionInfo = SCHEMA_REGISTRY_CLIENT.getSchemaVersionInfo(schemaIdVersion_2);
+        Assert.assertEquals(SchemaLifeCycleStates.ARCHIVED.id(), schemaVersionInfo.getStateId().byteValue());
+    }
 }

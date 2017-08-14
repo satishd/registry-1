@@ -15,6 +15,8 @@
  */
 package com.hortonworks.registries.schemaregistry.state;
 
+import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
+
 import java.util.Map;
 
 /**
@@ -40,5 +42,5 @@ public interface SchemaReviewExecutor {
      *
      * @param schemaLifeCycleContext
      */
-    public void execute(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException;
+    public void execute(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException, SchemaNotFoundException;
 }

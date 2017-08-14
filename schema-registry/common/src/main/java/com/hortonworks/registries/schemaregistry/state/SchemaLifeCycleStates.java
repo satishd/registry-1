@@ -111,14 +111,14 @@ public final class SchemaLifeCycleStates {
 
         @Override
         public void startReview(SchemaLifeCycleContext context,
-                                SchemaReviewExecutor schemaReviewExecutor) throws SchemaLifeCycleException {
+                                SchemaReviewExecutor schemaReviewExecutor) throws SchemaLifeCycleException, SchemaNotFoundException {
             context.setState(START_REVIEW);
             // get review state executor and
             context.updateSchemaVersionState();
         }
 
         @Override
-        public void enable(SchemaLifeCycleContext context) throws SchemaLifeCycleException {
+        public void enable(SchemaLifeCycleContext context) throws SchemaLifeCycleException, SchemaNotFoundException {
             // update state
             context.setState(ENABLED);
             context.updateSchemaVersionState();
@@ -140,7 +140,7 @@ public final class SchemaLifeCycleStates {
         }
 
         public void startReview(SchemaLifeCycleContext context,
-                                SchemaReviewExecutor schemaReviewExecutor) throws SchemaLifeCycleException {
+                                SchemaReviewExecutor schemaReviewExecutor) throws SchemaLifeCycleException, SchemaNotFoundException {
             //
         }
 
@@ -160,14 +160,14 @@ public final class SchemaLifeCycleStates {
 
         @Override
         public void startReview(SchemaLifeCycleContext context,
-                                SchemaReviewExecutor schemaReviewExecutor) throws SchemaLifeCycleException {
+                                SchemaReviewExecutor schemaReviewExecutor) throws SchemaLifeCycleException, SchemaNotFoundException {
             context.setState(START_REVIEW);
             // execute start review process, updation of the state should be done by schemaReviewExecutor
             schemaReviewExecutor.execute(context);
         }
 
         @Override
-        public void delete(SchemaLifeCycleContext context) throws SchemaLifeCycleException {
+        public void delete(SchemaLifeCycleContext context) throws SchemaLifeCycleException, SchemaNotFoundException {
             context.setState(DELETED);
             context.getSchemaVersionService().deleteSchemaVersion(context.getSchemaVersionId());
             context.updateSchemaVersionState();
@@ -187,13 +187,13 @@ public final class SchemaLifeCycleStates {
         }
 
         @Override
-        public void enable(SchemaLifeCycleContext context) throws SchemaLifeCycleException {
+        public void enable(SchemaLifeCycleContext context) throws SchemaLifeCycleException, SchemaNotFoundException {
             context.setState(ENABLED);
             context.updateSchemaVersionState();
         }
 
         @Override
-        public void archive(SchemaLifeCycleContext context) throws SchemaLifeCycleException {
+        public void archive(SchemaLifeCycleContext context) throws SchemaLifeCycleException, SchemaNotFoundException {
             context.setState(ARCHIVED);
             try {
                 context.getSchemaVersionService().archiveSchemaVersion(context.getSchemaVersionId());
@@ -217,13 +217,13 @@ public final class SchemaLifeCycleStates {
         }
 
         @Override
-        public void disable(SchemaLifeCycleContext context) throws SchemaLifeCycleException {
+        public void disable(SchemaLifeCycleContext context) throws SchemaLifeCycleException, SchemaNotFoundException {
             context.setState(DISABLED);
             context.updateSchemaVersionState();
         }
 
         @Override
-        public void archive(SchemaLifeCycleContext context) throws SchemaLifeCycleException {
+        public void archive(SchemaLifeCycleContext context) throws SchemaLifeCycleException, SchemaNotFoundException {
             context.setState(ARCHIVED);
             try {
                 context.getSchemaVersionService().archiveSchemaVersion(context.getSchemaVersionId());
@@ -246,13 +246,13 @@ public final class SchemaLifeCycleStates {
         }
 
         @Override
-        public void enable(SchemaLifeCycleContext context) throws SchemaLifeCycleException {
+        public void enable(SchemaLifeCycleContext context) throws SchemaLifeCycleException, SchemaNotFoundException {
             context.setState(ENABLED);
             context.updateSchemaVersionState();
         }
 
         @Override
-        public void archive(SchemaLifeCycleContext context) throws SchemaLifeCycleException {
+        public void archive(SchemaLifeCycleContext context) throws SchemaLifeCycleException, SchemaNotFoundException {
             context.setState(ARCHIVED);
             try {
                 context.getSchemaVersionService().archiveSchemaVersion(context.getSchemaVersionId());

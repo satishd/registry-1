@@ -22,7 +22,7 @@ import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
  */
 public interface SchemaVersionService {
 
-    public void updateSchemaVersionState(SchemaLifeCycleContext schemaLifeCycleContext);
+    public void updateSchemaVersionState(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaNotFoundException;
 
     public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException;
 

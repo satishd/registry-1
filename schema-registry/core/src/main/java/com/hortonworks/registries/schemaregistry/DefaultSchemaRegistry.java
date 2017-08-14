@@ -15,8 +15,6 @@
  **/
 package com.hortonworks.registries.schemaregistry;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.hortonworks.registries.common.QueryParam;
 import com.hortonworks.registries.common.util.FileStorage;
 import com.hortonworks.registries.schemaregistry.errors.IncompatibleSchemaException;
@@ -35,7 +33,6 @@ import com.hortonworks.registries.storage.search.WhereClause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -46,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -55,7 +53,6 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultSchemaRegistry.class);
 
     public static final String ORDER_BY_FIELDS_PARAM_NAME = "_orderByFields";
-
 
     private final StorageManager storageManager;
     private final FileStorage fileStorage;
@@ -84,30 +81,62 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
                         SerDesInfoStorable.class,
                         SchemaSerDesMapping.class));
 
-        Map<String, SchemaProvider> schemaTypeWithProviders = new HashMap<>();
-        schemaVersionLifeCycleManager = new SchemaVersionLifeCycleManager(storageManager, props, schemaTypeWithProviders);
+        SchemaMetadataFetcher schemaMetadataFetcher = createSchemaMetadataFetcher();
+        schemaVersionLifeCycleManager = new SchemaVersionLifeCycleManager(storageManager,
+                                                                          props,
+                                                                          schemaMetadataFetcher);
 
         Collection<? extends SchemaProvider> schemaProviders = initSchemaProviders(schemaProvidersConfig,
                                                                                    schemaVersionLifeCycleManager.getSchemaVersionRetriever());
-        for (SchemaProvider schemaProvider : schemaProviders) {
-            schemaTypeWithProviders.put(schemaProvider.getType(), schemaProvider);
-        }
-        this.schemaTypeWithProviders = schemaTypeWithProviders;
 
-        schemaProviderInfos = Collections.unmodifiableList(schemaProviders.stream()
-                                                                          .map(schemaProvider
-                                                                                       -> new SchemaProviderInfo(schemaProvider
-                                                                                                                         .getType(),
-                                                                                                                 schemaProvider
-                                                                                                                         .getName(),
-                                                                                                                 schemaProvider
-                                                                                                                         .getDescription(),
-                                                                                                                 schemaProvider
-                                                                                                                         .getDefaultSerializerClassName(),
-                                                                                                                 schemaProvider
-                                                                                                                         .getDefaultDeserializerClassName()
-                                                                               )
-                                                                              ).collect(Collectors.toList()));
+        this.schemaTypeWithProviders = schemaProviders.stream()
+                                                      .collect(Collectors.toMap(SchemaProvider::getType,
+                                                                                Function.identity()));
+
+        schemaProviderInfos = Collections.unmodifiableList(
+                schemaProviders.stream()
+                               .map(schemaProvider
+                                            -> new SchemaProviderInfo(schemaProvider
+                                                                              .getType(),
+                                                                      schemaProvider
+                                                                              .getName(),
+                                                                      schemaProvider
+                                                                              .getDescription(),
+                                                                      schemaProvider
+                                                                              .getDefaultSerializerClassName(),
+                                                                      schemaProvider
+                                                                              .getDefaultDeserializerClassName()))
+                               .collect(Collectors.toList()));
+    }
+
+    private SchemaMetadataFetcher createSchemaMetadataFetcher() {
+        return new SchemaMetadataFetcher() {
+
+            @Override
+            public SchemaMetadataInfo getSchemaMetadataInfo(
+                    String schemaName) {
+                return DefaultSchemaRegistry.this.getSchemaMetadataInfo(schemaName);
+            }
+
+            @Override
+            public SchemaMetadataInfo getSchemaMetadataInfo(
+                    Long schemaMetadataId) {
+                return DefaultSchemaRegistry.this.getSchemaMetadataInfo(schemaMetadataId);
+            }
+
+            @Override
+            public SchemaProvider getSchemaProvider(String providerType) {
+                return schemaTypeWithProviders.get(providerType);
+            }
+        };
+    }
+
+    public interface SchemaMetadataFetcher {
+        SchemaMetadataInfo getSchemaMetadataInfo(String schemaName);
+
+        SchemaMetadataInfo getSchemaMetadataInfo(Long schemaMetadataId);
+
+        SchemaProvider getSchemaProvider(String providerType);
     }
 
     private Collection<? extends SchemaProvider> initSchemaProviders(final Collection<Map<String, Object>> schemaProvidersConfig,
@@ -116,32 +145,31 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
             throw new IllegalArgumentException("No [" + SCHEMA_PROVIDERS + "] property is configured in schema registry configuration file.");
         }
 
-        return Collections2.transform(schemaProvidersConfig, new Function<Map<String, Object>, SchemaProvider>() {
-            @Nullable
-            @Override
-            public SchemaProvider apply(@Nullable Map<String, Object> schemaProviderConfig) {
-                String className = (String) schemaProviderConfig.get("providerClass");
-                if (className == null || className.isEmpty()) {
-                    throw new IllegalArgumentException("Schema provider class name must be non empty, Invalid provider class name [" + className + "]");
-                }
+        return schemaProvidersConfig.stream()
+                                    .map(schemaProviderConfig -> {
+                                        String className = (String) schemaProviderConfig.get("providerClass");
+                                        if (className == null || className.isEmpty()) {
+                                            throw new IllegalArgumentException("Schema provider class name must be non empty, Invalid provider class name [" + className + "]");
+                                        }
 
-                try {
-                    SchemaProvider schemaProvider = (SchemaProvider) Class.forName(className,
+                                        try {
+                                            SchemaProvider schemaProvider =
+                                                    (SchemaProvider) Class.forName(className,
                                                                                    true,
                                                                                    Thread.currentThread()
                                                                                          .getContextClassLoader())
                                                                           .newInstance();
-                    HashMap<String, Object> config = new HashMap<>(schemaProviderConfig);
-                    config.put(SchemaProvider.SCHEMA_VERSION_RETRIEVER_CONFIG, schemaVersionRetriever);
-                    schemaProvider.init(Collections.unmodifiableMap(config));
+                                            HashMap<String, Object> config = new HashMap<>(schemaProviderConfig);
+                                            config.put(SchemaProvider.SCHEMA_VERSION_RETRIEVER_CONFIG, schemaVersionRetriever);
+                                            schemaProvider.init(Collections.unmodifiableMap(config));
 
-                    return schemaProvider;
-                } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                    LOG.error("Error encountered while loading SchemaProvider [{}] ", className, e);
-                    throw new IllegalArgumentException(e);
-                }
-            }
-        });
+                                            return schemaProvider;
+                                        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+                                            LOG.error("Error encountered while loading SchemaProvider [{}] ", className, e);
+                                            throw new IllegalArgumentException(e);
+                                        }
+                                    })
+                                    .collect(Collectors.toList());
     }
 
     @Override
@@ -361,7 +389,7 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
     public SchemaIdVersion addSchemaVersion(SchemaMetadata schemaMetadata,
                                             SchemaVersion schemaVersion)
             throws IncompatibleSchemaException, InvalidSchemaException, SchemaNotFoundException {
-        return schemaVersionLifeCycleManager.addSchemaVersion(schemaMetadata, schemaVersion);
+        return schemaVersionLifeCycleManager.addSchemaVersion(schemaMetadata, schemaVersion, x -> registerSchemaMetadata(x));
     }
 
     public SchemaIdVersion addSchemaVersion(String schemaName,
@@ -427,51 +455,7 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
     }
 
     public CompatibilityResult checkCompatibility(String schemaName, String toSchema) throws SchemaNotFoundException {
-        SchemaMetadataInfo schemaMetadataInfo = getSchemaMetadataInfo(schemaName);
-        SchemaMetadata schemaMetadata = schemaMetadataInfo.getSchemaMetadata();
-        SchemaValidationLevel validationLevel = schemaMetadata.getValidationLevel();
-        CompatibilityResult compatibilityResult;
-        switch (validationLevel) {
-            case LATEST:
-                SchemaVersionInfo latestSchemaVersionInfo = getLatestSchemaVersionInfo(schemaName);
-                compatibilityResult = checkCompatibility(schemaMetadata.getType(),
-                                                         toSchema,
-                                                         latestSchemaVersionInfo.getSchemaText(),
-                                                         schemaMetadata.getCompatibility());
-                if (!compatibilityResult.isCompatible()) {
-                    LOG.info("Received schema is not compatible with the latest schema versions [{}] with schema name [{}]",
-                             latestSchemaVersionInfo.getVersion(), schemaName);
-                    return compatibilityResult;
-                }
-                break;
-            case ALL:
-                Collection<SchemaVersionInfo> schemaVersionInfos = getAllVersions(schemaName);
-                for (SchemaVersionInfo schemaVersionInfo : schemaVersionInfos) {
-                    compatibilityResult = checkCompatibility(schemaMetadata.getType(),
-                                                             toSchema,
-                                                             schemaVersionInfo.getSchemaText(),
-                                                             schemaMetadata.getCompatibility());
-                    if (!compatibilityResult.isCompatible()) {
-                        LOG.info("Received schema is not compatible with one of the schema versions [{}] with schema name [{}]",
-                                 schemaVersionInfo.getVersion(), schemaName);
-                        return compatibilityResult;
-                    }
-                }
-                break;
-        }
-        return CompatibilityResult.createCompatibleResult(toSchema);
-    }
-
-    private CompatibilityResult checkCompatibility(String type,
-                                                   String toSchema,
-                                                   String existingSchema,
-                                                   SchemaCompatibility compatibility) {
-        SchemaProvider schemaProvider = schemaTypeWithProviders.get(type);
-        if (schemaProvider == null) {
-            throw new IllegalStateException("No SchemaProvider registered for type: " + type);
-        }
-
-        return schemaProvider.checkCompatibility(toSchema, existingSchema, compatibility);
+        return schemaVersionLifeCycleManager.checkCompatibility(schemaName, toSchema);
     }
 
     @Override

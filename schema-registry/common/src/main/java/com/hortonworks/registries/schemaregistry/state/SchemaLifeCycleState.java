@@ -15,6 +15,8 @@
  */
 package com.hortonworks.registries.schemaregistry.state;
 
+import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
+
 /**
  *
  */
@@ -36,24 +38,24 @@ public interface SchemaLifeCycleState {
     String description();
 
     public default void startReview(SchemaLifeCycleContext schemaLifeCycleContext,
-                                    SchemaReviewExecutor schemaReviewExecutor) throws SchemaLifeCycleException {
+                                    SchemaReviewExecutor schemaReviewExecutor) throws SchemaLifeCycleException, SchemaNotFoundException {
         throw new SchemaLifeCycleException(" This operation is not supported for this instance: " + this);
     }
 
-    public default void enable(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException {
+    public default void enable(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException, SchemaNotFoundException {
         throw new SchemaLifeCycleException(" This operation is not supported for this instance: " + this);
     }
 
-    public default void disable(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException {
+    public default void disable(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException, SchemaNotFoundException {
         throw new SchemaLifeCycleException(" This operation is not supported for this instance: " + this);
 
     }
 
-    public default void archive(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException {
+    public default void archive(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException, SchemaNotFoundException {
         throw new SchemaLifeCycleException(" This operation is not supported for this instance: " + this);
     }
 
-    public default void delete(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException {
+    public default void delete(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException, SchemaNotFoundException {
         throw new SchemaLifeCycleException(" This operation is not supported for this instance: " + this);
     }
 

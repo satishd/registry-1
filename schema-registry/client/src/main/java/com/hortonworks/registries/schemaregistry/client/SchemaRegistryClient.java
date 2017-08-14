@@ -84,7 +84,6 @@ import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -617,34 +616,34 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
 
     @Override
     public void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        postSchemaVersionState(schemaVersionId, "enable");
+        fetchSchemaVersionState(schemaVersionId, "enable");
     }
 
     @Override
     public void disableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        postSchemaVersionState(schemaVersionId, "disable");
+        fetchSchemaVersionState(schemaVersionId, "disable");
     }
 
     @Override
     public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        postSchemaVersionState(schemaVersionId, "delete");
+        fetchSchemaVersionState(schemaVersionId, "delete");
     }
 
     @Override
     public void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        postSchemaVersionState(schemaVersionId, "archive");
+        fetchSchemaVersionState(schemaVersionId, "archive");
     }
 
     @Override
     public void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        postSchemaVersionState(schemaVersionId, "startReview");
+        fetchSchemaVersionState(schemaVersionId, "startReview");
 
     }
 
+    private boolean fetchSchemaVersionState(Long schemaVersionId,
+                                            String operation) throws SchemaNotFoundException, SchemaLifeCycleException {
 
-    private void postSchemaVersionState(Long schemaVersionId,
-                                        String operation) throws SchemaNotFoundException, SchemaLifeCycleException {
-        WebTarget webTarget = currentSchemaRegistryTargets().rootTarget.path("/schemas/versionsById/" + schemaVersionId + "/" + operation);
+        WebTarget webTarget = currentSchemaRegistryTargets().schemaVersionsByIdTarget.path(schemaVersionId + "/" + operation);
         Response response = Subject.doAs(subject, new PrivilegedAction<Response>() {
             @Override
             public Response run() {
@@ -652,11 +651,16 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
             }
         });
 
-        boolean result = handleSchemaLifeCycleResponse(response);
+        boolean result =  handleSchemaLifeCycleResponse(response);
+
+        // invalidate this entry from cache.
+        schemaVersionInfoCache.invalidateSchema(SchemaVersionInfoCache.Key.of(new SchemaIdVersion(schemaVersionId)));
+
+        return result;
     }
 
     private boolean handleSchemaLifeCycleResponse(Response response) throws SchemaNotFoundException, SchemaLifeCycleException {
-        boolean result = false;
+        boolean result;
         int status = response.getStatus();
         if(status == Response.Status.OK.getStatusCode()) {
             result = response.readEntity(Boolean.class);

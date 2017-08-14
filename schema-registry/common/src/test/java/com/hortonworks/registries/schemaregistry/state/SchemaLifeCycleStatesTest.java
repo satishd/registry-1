@@ -55,7 +55,7 @@ public class SchemaLifeCycleStatesTest {
                 LOG.info("Archiving schema version [{}]", schemaVersionId);
             }
         };
-        context = new SchemaLifeCycleContext(1L, schemaVersionService);
+        context = new SchemaLifeCycleContext(1L, 1, schemaVersionService);
     }
 
     @Test
@@ -129,7 +129,8 @@ public class SchemaLifeCycleStatesTest {
         checkDeleteNotSupported(deleted, context);
     }
 
-    private void checkArchiveNotSupported(SchemaLifeCycleState state, SchemaLifeCycleContext context) {
+    private void checkArchiveNotSupported(SchemaLifeCycleState state,
+                                          SchemaLifeCycleContext context) throws SchemaNotFoundException {
         try {
             state.archive(context);
             Assert.fail(state.name() + " should not lead to archive state");
@@ -138,7 +139,8 @@ public class SchemaLifeCycleStatesTest {
     }
 
 
-    private void checkDeleteNotSupported(SchemaLifeCycleState state, SchemaLifeCycleContext context) {
+    private void checkDeleteNotSupported(SchemaLifeCycleState state,
+                                         SchemaLifeCycleContext context) throws SchemaNotFoundException {
         try {
             state.delete(context);
             Assert.fail(state.name() + " should not lead to delete state");
@@ -146,7 +148,8 @@ public class SchemaLifeCycleStatesTest {
         }
     }
 
-    private void checkDisableNotSupported(SchemaLifeCycleState state, SchemaLifeCycleContext context) {
+    private void checkDisableNotSupported(SchemaLifeCycleState state,
+                                          SchemaLifeCycleContext context) throws SchemaNotFoundException {
         try {
             state.disable(context);
             Assert.fail(state.name() + " should not lead to disabled state");
@@ -154,7 +157,8 @@ public class SchemaLifeCycleStatesTest {
         }
     }
 
-    private void checkEnableNotSupported(SchemaLifeCycleState state, SchemaLifeCycleContext context) {
+    private void checkEnableNotSupported(SchemaLifeCycleState state,
+                                         SchemaLifeCycleContext context) throws SchemaNotFoundException {
         try {
             state.enable(context);
             Assert.fail(state.name() + " should not lead to enable state");
@@ -162,7 +166,8 @@ public class SchemaLifeCycleStatesTest {
         }
     }
 
-    private void checkStartReviewNotSupported(SchemaLifeCycleState state, SchemaLifeCycleContext context) {
+    private void checkStartReviewNotSupported(SchemaLifeCycleState state,
+                                              SchemaLifeCycleContext context) throws SchemaNotFoundException {
         try {
             state.startReview(context, createDefaultSchemaReviewExecutor());
             Assert.fail(state.name() + " should not lead to startReview state");

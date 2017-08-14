@@ -607,7 +607,6 @@ public class SchemaRegistryResource extends BaseRegistryResource {
         return response;
     }
 
-
     @POST
     @Path("/schemas/versionsById/{id}/enable")
     @ApiOperation(value = "Enables version of the schema identified by the given versionid",

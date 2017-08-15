@@ -608,7 +608,7 @@ public class SchemaRegistryResource extends BaseRegistryResource {
     }
 
     @POST
-    @Path("/schemas/versionsById/{id}/enable")
+    @Path("/schemas/versionsById/{id}/states/enable")
     @ApiOperation(value = "Enables version of the schema identified by the given versionid",
             response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
     @Timed
@@ -633,7 +633,7 @@ public class SchemaRegistryResource extends BaseRegistryResource {
     }
 
     @POST
-    @Path("/schemas/versionsById/{id}/disable")
+    @Path("/schemas/versionsById/{id}/states/disable")
     @ApiOperation(value = "Disables version of the schema identified by the given version id",
             response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
     @Timed
@@ -658,7 +658,7 @@ public class SchemaRegistryResource extends BaseRegistryResource {
     }
 
     @POST
-    @Path("/schemas/versionsById/{id}/archive")
+    @Path("/schemas/versionsById/{id}/states/archive")
     @ApiOperation(value = "Disables version of the schema identified by the given version id",
             response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
     @Timed
@@ -684,7 +684,7 @@ public class SchemaRegistryResource extends BaseRegistryResource {
 
 
     @POST
-    @Path("/schemas/versionsById/{id}/delete")
+    @Path("/schemas/versionsById/{id}/states/delete")
     @ApiOperation(value = "Disables version of the schema identified by the given version id",
             response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
     @Timed
@@ -709,7 +709,7 @@ public class SchemaRegistryResource extends BaseRegistryResource {
     }
 
     @POST
-    @Path("/schemas/versionsById/{id}/startReview")
+    @Path("/schemas/versionsById/{id}/states/startReview")
     @ApiOperation(value = "Disables version of the schema identified by the given version id",
             response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
     @Timed
@@ -718,6 +718,32 @@ public class SchemaRegistryResource extends BaseRegistryResource {
         Response response;
         try {
             schemaRegistry.startSchemaVersionReview(versionId);
+            response = WSUtils.respondEntity(true, Response.Status.OK);
+        } catch (SchemaNotFoundException e) {
+            LOG.info("No schema version is found with schema version id : [{}]", versionId);
+            response = WSUtils.respond(Response.Status.NOT_FOUND, CatalogResponse.ResponseMessage.ENTITY_NOT_FOUND, versionId.toString());
+        } catch(SchemaLifeCycleException e) {
+            LOG.error("Encountered error while disabling schema version with id [{}]", versionId, e);
+            response = WSUtils.respond(Response.Status.BAD_REQUEST, CatalogResponse.ResponseMessage.BAD_REQUEST, e.getMessage());
+        } catch (Exception ex) {
+            LOG.error("Encountered error while getting schema version with id [{}]", versionId, ex);
+            response = WSUtils.respond(Response.Status.INTERNAL_SERVER_ERROR, CatalogResponse.ResponseMessage.EXCEPTION, ex.getMessage());
+        }
+
+        return response;
+    }
+
+
+    @POST
+    @Path("/schemas/versionsById/{id}/states/custom")
+    @ApiOperation(value = "Runs the custom state execution for schema version identified by the given version id",
+            response = Boolean.class, tags = OPERATION_GROUP_SCHEMA)
+    @Timed
+    public Response executeCustomState(@ApiParam(value = "version identifier of the schema", required = true) @PathParam("id") Long versionId) {
+
+        Response response;
+        try {
+            schemaRegistry.executeCustomState(versionId);
             response = WSUtils.respondEntity(true, Response.Status.OK);
         } catch (SchemaNotFoundException e) {
             LOG.info("No schema version is found with schema version id : [{}]", versionId);

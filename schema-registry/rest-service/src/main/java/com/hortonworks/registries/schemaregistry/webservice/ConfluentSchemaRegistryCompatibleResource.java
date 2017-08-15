@@ -289,7 +289,7 @@ public class ConfluentSchemaRegistryCompatibleResource extends BaseRegistryResou
                     "In case of incompatible schema errors, it throws error message like 'Unable to read schema: <> using schema <>' ",
             response = Id.class, tags = OPERATION_GROUP_CONFLUENT_SR)
     @Timed
-    public Response registerSchema(@ApiParam(value = "subject", required = true) @PathParam("subject")
+    public Response registerSchemaVersion(@ApiParam(value = "subject", required = true) @PathParam("subject")
                                            String subject,
                                    @ApiParam(value = "Details about the schema", required = true)
                                            String schema,

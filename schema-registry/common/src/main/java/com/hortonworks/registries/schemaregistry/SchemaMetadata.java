@@ -212,7 +212,7 @@ public class SchemaMetadata implements Serializable {
             description = schemaMetadata.getDescription();
             compatibility = schemaMetadata.getCompatibility();
             validationLevel = schemaMetadata.getValidationLevel();
-            evolve = schemaMetadata.evolve;
+            evolve = schemaMetadata.isEvolve();
         }
 
         /**

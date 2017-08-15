@@ -220,7 +220,7 @@ public interface ISchemaRegistryService {
      */
     Collection<SerDesInfo> getSerDes(String schemaName);
 
-    default void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+    default void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException, IncompatibleSchemaException {
         throw new UnsupportedOperationException();
     }
 
@@ -240,4 +240,7 @@ public interface ISchemaRegistryService {
         throw new UnsupportedOperationException();
     }
 
+    default void executeCustomState(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        throw new UnsupportedOperationException();
+    }
 }

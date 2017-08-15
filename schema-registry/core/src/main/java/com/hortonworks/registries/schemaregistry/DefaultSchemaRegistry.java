@@ -77,6 +77,7 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
                 Arrays.asList(
                         SchemaMetadataStorable.class,
                         SchemaVersionStorable.class,
+                        SchemaVersionStateStorable.class,
                         SchemaFieldInfoStorable.class,
                         SerDesInfoStorable.class,
                         SchemaSerDesMapping.class));
@@ -425,7 +426,7 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
     }
 
     @Override
-    public void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+    public void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException, IncompatibleSchemaException {
         schemaVersionLifeCycleManager.enableSchemaVersion(schemaVersionId);
     }
 
@@ -447,6 +448,11 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
     @Override
     public void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
         schemaVersionLifeCycleManager.startSchemaVersionReview(schemaVersionId);
+    }
+
+    @Override
+    public void executeCustomState(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        schemaVersionLifeCycleManager.executeCustomState(schemaVersionId);
     }
 
     @Override

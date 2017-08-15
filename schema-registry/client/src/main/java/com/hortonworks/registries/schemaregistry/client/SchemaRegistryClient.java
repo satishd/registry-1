@@ -234,7 +234,7 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
                 return doGetSchemaVersionInfo(key);
             }
         },
-                ((Number) configuration.getValue(Configuration.SCHEMA_VERSION_CACHE_SIZE.name())).longValue(),
+                ((Number) configuration.getValue(Configuration.SCHEMA_VERSION_CACHE_SIZE.name())).intValue(),
                 ((Number) configuration.getValue(Configuration.SCHEMA_VERSION_CACHE_EXPIRY_INTERVAL_SECS.name())).longValue());
 
         SchemaMetadataCache.SchemaMetadataFetcher schemaMetadataFetcher = createSchemaMetadataFetcher();
@@ -582,18 +582,23 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
         }
     }
 
-    private SchemaVersionInfo doGetSchemaVersionInfo(SchemaIdVersion key) throws SchemaNotFoundException {
-        if(key.getSchemaVersionId() != null) {
-            return getEntity(currentSchemaRegistryTargets().schemaVersionsByIdTarget.path(key.getSchemaVersionId().toString()), SchemaVersionInfo.class);
-        } else if (key.getSchemaMetadataId() != null){
-            SchemaMetadataInfo schemaMetadataInfo = getSchemaMetadataInfo(key.getSchemaMetadataId());
-            return getSchemaVersionInfo(new SchemaVersionKey(schemaMetadataInfo.getSchemaMetadata().getName(), key.getVersion()));
+    private SchemaVersionInfo doGetSchemaVersionInfo(SchemaIdVersion schemaIdVersion) throws SchemaNotFoundException {
+        if(schemaIdVersion.getSchemaVersionId() != null) {
+            LOG.info("Getting schema version from target registry for [{}]", schemaIdVersion.getSchemaVersionId());
+            return getEntity(currentSchemaRegistryTargets().schemaVersionsByIdTarget.path(schemaIdVersion.getSchemaVersionId().toString()), SchemaVersionInfo.class);
+        } else if (schemaIdVersion.getSchemaMetadataId() != null){
+            SchemaMetadataInfo schemaMetadataInfo = getSchemaMetadataInfo(schemaIdVersion.getSchemaMetadataId());
+            SchemaVersionKey schemaVersionKey = new SchemaVersionKey(schemaMetadataInfo.getSchemaMetadata()
+                                                                                       .getName(), schemaIdVersion.getVersion());
+            LOG.info("Getting schema version from target registry for key [{}]", schemaVersionKey);
+            return doGetSchemaVersionInfo(schemaVersionKey);
         }
 
-        throw new IllegalArgumentException("Given argument not valid: " + key);
+        throw new IllegalArgumentException("Given argument not valid: " + schemaIdVersion);
     }
 
     private SchemaVersionInfo doGetSchemaVersionInfo(SchemaVersionKey schemaVersionKey) {
+        LOG.info("Getting schema version from target registry for [{}]", schemaVersionKey);
         String schemaName = schemaVersionKey.getSchemaName();
         WebTarget webTarget = currentSchemaRegistryTargets().schemasTarget.path(String.format("%s/versions/%d", schemaName, schemaVersionKey.getVersion()));
 
@@ -643,7 +648,7 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
     private boolean fetchSchemaVersionState(Long schemaVersionId,
                                             String operation) throws SchemaNotFoundException, SchemaLifeCycleException {
 
-        WebTarget webTarget = currentSchemaRegistryTargets().schemaVersionsByIdTarget.path(schemaVersionId + "/" + operation);
+        WebTarget webTarget = currentSchemaRegistryTargets().schemaVersionsByIdTarget.path(schemaVersionId + "/states/" + operation);
         Response response = Subject.doAs(subject, new PrivilegedAction<Response>() {
             @Override
             public Response run() {
@@ -948,7 +953,7 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
                                      DEFAULT_CLASSLOADER_CACHE_EXPIRY_INTERVAL_SECS,
                                      ConfigEntry.PositiveNumberValidator.get());
 
-        public static final long DEFAULT_SCHEMA_CACHE_SIZE = 1024L;
+        public static final long DEFAULT_SCHEMA_CACHE_SIZE = 1024;
         public static final long DEFAULT_SCHEMA_CACHE_EXPIRY_INTERVAL_SECS = 5 * 60L;
 
         /**

@@ -15,16 +15,30 @@
  */
 package com.hortonworks.registries.schemaregistry.state;
 
+import com.hortonworks.registries.schemaregistry.CompatibilityResult;
+import com.hortonworks.registries.schemaregistry.SchemaMetadata;
+import com.hortonworks.registries.schemaregistry.SchemaMetadataInfo;
+import com.hortonworks.registries.schemaregistry.SchemaVersionInfo;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
+
+import java.util.Collection;
 
 /**
  *
  */
 public interface SchemaVersionService {
 
-    public void updateSchemaVersionState(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaNotFoundException;
+    public void updateSchemaVersionState(SchemaVersionLifeCycleContext schemaVersionLifeCycleContext) throws SchemaNotFoundException;
 
     public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException;
 
-    public void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException;
+    SchemaMetadataInfo getSchemaMetadata(long schemaVersionId) throws SchemaNotFoundException;
+
+    SchemaVersionInfo getSchemaVersionInfo(long schemaVersionId) throws SchemaNotFoundException;
+
+    CompatibilityResult checkForCompatibility(SchemaMetadata schemaMetadata,
+                                              String toSchemaText,
+                                              String existingSchemaText);
+
+    Collection<SchemaVersionInfo> getAllSchemaVersions(String schemaName) throws SchemaNotFoundException;
 }

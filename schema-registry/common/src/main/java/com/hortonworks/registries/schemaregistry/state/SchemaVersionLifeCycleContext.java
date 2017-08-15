@@ -23,26 +23,29 @@ import java.util.concurrent.ConcurrentMap;
 /**
  *
  */
-public class SchemaLifeCycleContext {
-    private SchemaLifeCycleState state;
+public class SchemaVersionLifeCycleContext {
+    private SchemaVersionLifeCycleState state;
     private Long schemaVersionId;
     private Integer sequence;
     private SchemaVersionService schemaVersionService;
+    private SchemaVersionLifeCycleStates.Registry schemaLifeCycleStatesRegistry;
     private ConcurrentMap<String, Object> props = new ConcurrentHashMap<>();
 
-    public SchemaLifeCycleContext(Long schemaVersionId,
-                                  Integer sequence,
-                                  SchemaVersionService schemaVersionService) {
+    public SchemaVersionLifeCycleContext(Long schemaVersionId,
+                                         Integer sequence,
+                                         SchemaVersionService schemaVersionService,
+                                         SchemaVersionLifeCycleStates.Registry schemaLifeCycleStatesRegistry) {
         this.schemaVersionId = schemaVersionId;
         this.sequence = sequence;
         this.schemaVersionService = schemaVersionService;
+        this.schemaLifeCycleStatesRegistry = schemaLifeCycleStatesRegistry;
     }
 
-    public void setState(SchemaLifeCycleState state) {
+    public void setState(SchemaVersionLifeCycleState state) {
         this.state = state;
     }
 
-    public SchemaLifeCycleState getState() {
+    public SchemaVersionLifeCycleState getState() {
         return state;
     }
 
@@ -56,6 +59,10 @@ public class SchemaLifeCycleContext {
 
     public SchemaVersionService getSchemaVersionService() {
         return schemaVersionService;
+    }
+
+    public SchemaVersionLifeCycleStates.Registry getSchemaLifeCycleStatesRegistry() {
+        return schemaLifeCycleStatesRegistry;
     }
 
     public Object getProperty(String key) {
@@ -72,10 +79,12 @@ public class SchemaLifeCycleContext {
 
     @Override
     public String toString() {
-        return "SchemaLifeCycleContext{" +
+        return "SchemaVersionLifeCycleContext{" +
                 "state=" + state +
                 ", schemaVersionId=" + schemaVersionId +
+                ", sequence=" + sequence +
                 ", schemaVersionService=" + schemaVersionService +
+                ", schemaLifeCycleStatesRegistry=" + schemaLifeCycleStatesRegistry +
                 ", props=" + props +
                 '}';
     }

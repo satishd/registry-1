@@ -15,18 +15,25 @@
  */
 package com.hortonworks.registries.schemaregistry.state;
 
+import java.util.List;
+
 /**
  *
  */
-public class AbstractSchemaLifeCycleState implements SchemaLifeCycleState {
+public abstract class AbstractInbuiltSchemaLifeCycleState implements InbuiltSchemaVersionLifeCycleState {
     private final String name;
     private final byte id;
     private final String description;
+    private final List<SchemaVersionLifeCycleState> nextStates;
 
-    protected AbstractSchemaLifeCycleState(String name, byte id, String description) {
+    protected AbstractInbuiltSchemaLifeCycleState(String name,
+                                                  byte id,
+                                                  String description,
+                                                  List<SchemaVersionLifeCycleState> nextStates) {
         this.name = name;
         this.id = id;
         this.description = description;
+        this.nextStates = nextStates;
     }
 
     @Override
@@ -45,11 +52,16 @@ public class AbstractSchemaLifeCycleState implements SchemaLifeCycleState {
     }
 
     @Override
+    public List<SchemaVersionLifeCycleState> nextStates() {
+        return nextStates;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AbstractSchemaLifeCycleState that = (AbstractSchemaLifeCycleState) o;
+        AbstractInbuiltSchemaLifeCycleState that = (AbstractInbuiltSchemaLifeCycleState) o;
 
         if (id != that.id) return false;
         return name != null ? name.equals(that.name) : that.name == null;

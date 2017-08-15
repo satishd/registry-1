@@ -23,10 +23,11 @@ import com.hortonworks.registries.schemaregistry.errors.IncompatibleSchemaExcept
 import com.hortonworks.registries.schemaregistry.errors.InvalidSchemaException;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import com.hortonworks.registries.schemaregistry.errors.UnsupportedSchemaTypeException;
-import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleContext;
+import com.hortonworks.registries.schemaregistry.state.InbuiltSchemaVersionLifeCycleState;
+import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifeCycleContext;
 import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleException;
-import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleState;
-import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleStates;
+import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifeCycleState;
+import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifeCycleStates;
 import com.hortonworks.registries.schemaregistry.state.SchemaReviewExecutor;
 import com.hortonworks.registries.schemaregistry.state.SchemaVersionService;
 import com.hortonworks.registries.storage.OrderByField;
@@ -52,7 +53,7 @@ public class SchemaVersionLifeCycleManager {
     private static final Logger LOG = LoggerFactory.getLogger(SchemaVersionLifeCycleManager.class);
 
     private static final String DEFAULT_SCHEMA_REVIEW_EXECUTOR_CLASS = "com.hortonworks.registries.schemaregistry.state.DefaultSchemaReviewExecutor";
-    public static final SchemaLifeCycleState DEFAULT_VERSION_STATE = SchemaLifeCycleStates.INITIATED;
+    public static final InbuiltSchemaVersionLifeCycleState DEFAULT_VERSION_STATE = SchemaVersionLifeCycleStates.INITIATED;
     private SchemaReviewExecutor schemaReviewExecutor;
     private SchemaVersionInfoCache schemaVersionInfoCache;
     private SchemaVersionRetriever schemaVersionRetriever;
@@ -63,12 +64,14 @@ public class SchemaVersionLifeCycleManager {
 
     // todo remove this lock usage
     private Object addOrUpdateLock = new Object();
+    private SchemaVersionLifeCycleStates.Registry schemaLifeCycleStatesRegistry;
 
     public SchemaVersionLifeCycleManager(StorageManager storageManager,
                                          Map<String, Object> props,
                                          DefaultSchemaRegistry.SchemaMetadataFetcher schemaMetadataFetcher) {
         this.storageManager = storageManager;
         this.schemaMetadataFetcher = schemaMetadataFetcher;
+        schemaLifeCycleStatesRegistry = new SchemaVersionLifeCycleStates.Registry();
 
         Options options = new Options(props);
         schemaVersionRetriever = createSchemaVersionRetriever();
@@ -96,7 +99,7 @@ public class SchemaVersionLifeCycleManager {
             LOG.error("Error encountered while loading SchemaReviewExecutor [{}]", className, e);
             throw new IllegalArgumentException(e);
         }
-        schemaReviewExecutor.init(SchemaLifeCycleStates.REVIEWED, SchemaLifeCycleStates.CHANGES_REQUIRED, executorProps);
+        schemaReviewExecutor.init(SchemaVersionLifeCycleStates.REVIEWED, SchemaVersionLifeCycleStates.CHANGES_REQUIRED, executorProps);
 
         return schemaReviewExecutor;
     }
@@ -161,16 +164,24 @@ public class SchemaVersionLifeCycleManager {
         return new SchemaIdVersion(schemaMetadataInfo.getId(), schemaVersionInfo.getVersion(), schemaVersionInfo.getId());
     }
 
+    public SchemaVersionInfo getLatestEnabledSchemaVersionInfo(String schemaName) throws SchemaNotFoundException {
+        return getLatestSchemaVersionInfo(schemaName, SchemaVersionLifeCycleStates.ENABLED.id());
+    }
+
     public SchemaVersionInfo getLatestSchemaVersionInfo(String schemaName) throws SchemaNotFoundException {
+        return getLatestSchemaVersionInfo(schemaName, null);
+    }
+
+    public SchemaVersionInfo getLatestSchemaVersionInfo(String schemaName,
+                                                        Byte stateId) throws SchemaNotFoundException {
         Collection<SchemaVersionInfo> schemaVersionInfos = getAllVersions(schemaName);
 
         SchemaVersionInfo latestSchema = null;
         if (schemaVersionInfos != null && !schemaVersionInfos.isEmpty()) {
-            Integer curVersion = Integer.MIN_VALUE;
             for (SchemaVersionInfo schemaVersionInfo : schemaVersionInfos) {
-                if (schemaVersionInfo.getVersion() > curVersion) {
+                if (stateId == null || schemaVersionInfo.getStateId().equals(stateId)) {
                     latestSchema = schemaVersionInfo;
-                    curVersion = schemaVersionInfo.getVersion();
+                    break;
                 }
             }
         }
@@ -238,7 +249,7 @@ public class SchemaVersionLifeCycleManager {
 
                     storageManager.add(schemaVersionStorable);
                     try {
-                        DEFAULT_VERSION_STATE.enable(new SchemaLifeCycleContext(schemaVersionStorableId, 1, createSchemaVersionService()));
+                        DEFAULT_VERSION_STATE.enable(new SchemaVersionLifeCycleContext(schemaVersionStorable.getId(), 1, createSchemaVersionService(), schemaLifeCycleStatesRegistry));
                     } catch (SchemaLifeCycleException e) {
                         throw new RuntimeException(e);
                     }
@@ -297,14 +308,16 @@ public class SchemaVersionLifeCycleManager {
             case ALL:
                 Collection<SchemaVersionInfo> schemaVersionInfos = getAllVersions(schemaName);
                 for (SchemaVersionInfo schemaVersionInfo : schemaVersionInfos) {
-                    compatibilityResult = checkCompatibility(schemaMetadata.getType(),
-                                                             toSchema,
-                                                             schemaVersionInfo.getSchemaText(),
-                                                             schemaMetadata.getCompatibility());
-                    if (!compatibilityResult.isCompatible()) {
-                        LOG.info("Received schema is not compatible with one of the schema versions [{}] with schema name [{}]",
-                                 schemaVersionInfo.getVersion(), schemaName);
-                        return compatibilityResult;
+                    if (SchemaVersionLifeCycleStates.ENABLED.id() == schemaVersionInfo.getStateId()) {
+                        compatibilityResult = checkCompatibility(schemaMetadata.getType(),
+                                                                 toSchema,
+                                                                 schemaVersionInfo.getSchemaText(),
+                                                                 schemaMetadata.getCompatibility());
+                        if (!compatibilityResult.isCompatible()) {
+                            LOG.info("Received schema is not compatible with one of the schema versions [{}] with schema name [{}]",
+                                     schemaVersionInfo.getVersion(), schemaName);
+                            return compatibilityResult;
+                        }
                     }
                 }
                 break;
@@ -332,7 +345,8 @@ public class SchemaVersionLifeCycleManager {
             throw new SchemaNotFoundException("Schema not found with name " + schemaName);
         }
 
-        Collection<SchemaVersionStorable> storables = storageManager.find(SchemaVersionStorable.NAME_SPACE, queryParams);
+        Collection<SchemaVersionStorable> storables = storageManager.find(SchemaVersionStorable.NAME_SPACE, queryParams,
+                                                                          Collections.singletonList(OrderByField.of(SchemaVersionStorable.VERSION, true)));
         List<SchemaVersionInfo> schemaVersionInfos;
         if (storables != null && !storables.isEmpty()) {
             schemaVersionInfos = storables
@@ -416,61 +430,76 @@ public class SchemaVersionLifeCycleManager {
         }
     }
 
-    public void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        ImmutablePair<SchemaLifeCycleContext, SchemaLifeCycleState> pair = createSchemaLifeCycleContextAndState(schemaVersionId);
-        pair.getRight().enable(pair.getLeft());
-    }
-
-    private ImmutablePair<SchemaLifeCycleContext, SchemaLifeCycleState> createSchemaLifeCycleContextAndState(Long schemaVersionId)
+    private ImmutablePair<SchemaVersionLifeCycleContext, SchemaVersionLifeCycleState> createSchemaVersionLifeCycleContextAndState(
+            Long schemaVersionId)
             throws SchemaNotFoundException {
         // get the current state from storage for the given versionID
         // we can use a query to get max value for the column for a given schema-version-id but StorageManager does not
         // have API to take custom queries.
-        // todo we can have limit by to address this scenario
         Collection<SchemaVersionStateStorable> schemaVersionStates =
                 storageManager.find(SchemaVersionStateStorable.NAME_SPACE,
                                     Collections.singletonList(new QueryParam(SchemaVersionStateStorable.SCHEMA_VERSION_ID,
                                                                              schemaVersionId.toString())),
-                                    Collections.singletonList(OrderByField.of(SchemaVersionStateStorable.SEQUENCE)));
+                                    Collections.singletonList(OrderByField.of(SchemaVersionStateStorable.SEQUENCE, true)));
         if (schemaVersionStates.isEmpty()) {
             throw new SchemaNotFoundException("No schema versions found with id " + schemaVersionId);
         }
         SchemaVersionStateStorable stateStorable = schemaVersionStates.iterator().next();
 
-        SchemaLifeCycleState schemaLifeCycleState = SchemaLifeCycleStates.Registry.getInstance()
-                                                                                  .get(stateStorable.getStateId());
+        SchemaVersionLifeCycleState schemaVersionLifeCycleState = schemaLifeCycleStatesRegistry.get(stateStorable.getStateId());
         SchemaVersionService schemaVersionService = createSchemaVersionService();
-        SchemaLifeCycleContext context = new SchemaLifeCycleContext(stateStorable.getSchemaVersionId(),
-                                                                    stateStorable.getSequence(),
-                                                                    schemaVersionService);
-        return new ImmutablePair<>(context, schemaLifeCycleState);
+        SchemaVersionLifeCycleContext context = new SchemaVersionLifeCycleContext(stateStorable.getSchemaVersionId(),
+                                                                                  stateStorable.getSequence(),
+                                                                                  schemaVersionService,
+                                                                                  schemaLifeCycleStatesRegistry);
+        return new ImmutablePair<>(context, schemaVersionLifeCycleState);
     }
 
     private SchemaVersionService createSchemaVersionService() {
         return new SchemaVersionService() {
 
-            public void updateSchemaVersionState(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaNotFoundException {
-                storeSchemaVersionState(schemaLifeCycleContext);
+            public void updateSchemaVersionState(SchemaVersionLifeCycleContext schemaVersionLifeCycleContext) throws SchemaNotFoundException {
+                storeSchemaVersionState(schemaVersionLifeCycleContext);
             }
 
             public void deleteSchemaVersion(Long schemaVersionId) {
                 doDeleteSchemaVersion(schemaVersionId);
             }
 
-            public void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException {
+            @Override
+            public SchemaMetadataInfo getSchemaMetadata(long schemaVersionId) throws SchemaNotFoundException {
+                SchemaVersionInfo schemaVersionInfo = getSchemaVersionInfo(schemaVersionId);
+                return getSchemaMetadataInfo(schemaVersionInfo.getName());
+            }
+
+            @Override
+            public SchemaVersionInfo getSchemaVersionInfo(long schemaVersionId) throws SchemaNotFoundException {
+                return SchemaVersionLifeCycleManager.this.getSchemaVersionInfo(new SchemaIdVersion(schemaVersionId));
+            }
+
+            @Override
+            public CompatibilityResult checkForCompatibility(SchemaMetadata schemaMetadata,
+                                                             String toSchemaText,
+                                                             String existingSchemaText) {
+                return checkCompatibility(schemaMetadata.getType(), toSchemaText, existingSchemaText, schemaMetadata.getCompatibility());
+            }
+
+            @Override
+            public Collection<SchemaVersionInfo> getAllSchemaVersions(String schemaName) throws SchemaNotFoundException {
+                return getAllVersions(schemaName);
             }
         };
     }
 
-    private void storeSchemaVersionState(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaNotFoundException {
+    private void storeSchemaVersionState(SchemaVersionLifeCycleContext schemaVersionLifeCycleContext) throws SchemaNotFoundException {
         synchronized (addOrUpdateLock) {
             // store versions state, sequence
             SchemaVersionStateStorable stateStorable = new SchemaVersionStateStorable();
-            Long schemaVersionId = schemaLifeCycleContext.getSchemaVersionId();
-            byte stateId = schemaLifeCycleContext.getState().id();
+            Long schemaVersionId = schemaVersionLifeCycleContext.getSchemaVersionId();
+            byte stateId = schemaVersionLifeCycleContext.getState().id();
 
             stateStorable.setSchemaVersionId(schemaVersionId);
-            stateStorable.setSequence(schemaLifeCycleContext.getSequence() + 1);
+            stateStorable.setSequence(schemaVersionLifeCycleContext.getSequence() + 1);
             stateStorable.setStateId(stateId);
             stateStorable.setTimestamp(System.currentTimeMillis());
 
@@ -491,9 +520,14 @@ public class SchemaVersionLifeCycleManager {
         }
     }
 
+    public void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException, IncompatibleSchemaException {
+        ImmutablePair<SchemaVersionLifeCycleContext, SchemaVersionLifeCycleState> pair = createSchemaVersionLifeCycleContextAndState(schemaVersionId);
+        ((InbuiltSchemaVersionLifeCycleState) pair.getRight()).enable(pair.getLeft());
+    }
+
     public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        ImmutablePair<SchemaLifeCycleContext, SchemaLifeCycleState> pair = createSchemaLifeCycleContextAndState(schemaVersionId);
-        pair.getRight().delete(pair.getLeft());
+        ImmutablePair<SchemaVersionLifeCycleContext, SchemaVersionLifeCycleState> pair = createSchemaVersionLifeCycleContextAndState(schemaVersionId);
+        ((InbuiltSchemaVersionLifeCycleState) pair.getRight()).delete(pair.getLeft());
     }
 
     private void doDeleteSchemaVersion(Long schemaVersionId) {
@@ -511,19 +545,25 @@ public class SchemaVersionLifeCycleManager {
     }
 
     public void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        ImmutablePair<SchemaLifeCycleContext, SchemaLifeCycleState> pair = createSchemaLifeCycleContextAndState(schemaVersionId);
-        pair.getRight().archive(pair.getLeft());
+        ImmutablePair<SchemaVersionLifeCycleContext, SchemaVersionLifeCycleState> pair = createSchemaVersionLifeCycleContextAndState(schemaVersionId);
+        ((InbuiltSchemaVersionLifeCycleState) pair.getRight()).archive(pair.getLeft());
     }
 
-
     public void disableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        ImmutablePair<SchemaLifeCycleContext, SchemaLifeCycleState> pair = createSchemaLifeCycleContextAndState(schemaVersionId);
-        pair.getRight().disable(pair.getLeft());
+        ImmutablePair<SchemaVersionLifeCycleContext, SchemaVersionLifeCycleState> pair = createSchemaVersionLifeCycleContextAndState(schemaVersionId);
+        ((InbuiltSchemaVersionLifeCycleState) pair.getRight()).disable(pair.getLeft());
     }
 
     public void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        ImmutablePair<SchemaLifeCycleContext, SchemaLifeCycleState> pair = createSchemaLifeCycleContextAndState(schemaVersionId);
-        pair.getRight().startReview(pair.getLeft(), schemaReviewExecutor);
+        ImmutablePair<SchemaVersionLifeCycleContext, SchemaVersionLifeCycleState> pair = createSchemaVersionLifeCycleContextAndState(schemaVersionId);
+        ((InbuiltSchemaVersionLifeCycleState) pair.getRight()).startReview(pair.getLeft(), schemaReviewExecutor);
+    }
+
+    public void executeCustomState(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+        ImmutablePair<SchemaVersionLifeCycleContext, SchemaVersionLifeCycleState> schemaLifeCycleContextAndState = createSchemaVersionLifeCycleContextAndState(schemaVersionId);
+        SchemaVersionLifeCycleContext schemaVersionLifeCycleContext = schemaLifeCycleContextAndState.getLeft();
+        schemaVersionLifeCycleContext.setState(schemaLifeCycleContextAndState.getRight());
+        schemaReviewExecutor.execute(schemaVersionLifeCycleContext);
     }
 
     private SchemaVersionInfo retrieveSchemaVersionInfo(SchemaVersionKey schemaVersionKey) throws SchemaNotFoundException {
@@ -535,7 +575,7 @@ public class SchemaVersionLifeCycleManager {
             throw new SchemaNotFoundException("No SchemaMetadata exists with key: " + schemaName);
         }
 
-        return fetchSchemaVersionInfo(version, schemaMetadataInfo);
+        return fetchSchemaVersionInfo(schemaVersionKey.getSchemaName(), version);
     }
 
     private SchemaVersionInfo retrieveSchemaVersionInfo(SchemaIdVersion key) throws SchemaNotFoundException {
@@ -543,19 +583,14 @@ public class SchemaVersionLifeCycleManager {
         if (key.getSchemaVersionId() != null) {
             schemaVersionInfo = fetchSchemaVersionInfo(key.getSchemaVersionId());
         } else if (key.getSchemaMetadataId() != null) {
-            SchemaMetadataInfo schemaMetadataInfo = getSchemaMetadataInfo(key.getSchemaMetadataId());
+            SchemaMetadataInfo schemaMetadataInfo = schemaMetadataFetcher.getSchemaMetadataInfo(key.getSchemaMetadataId());
             Integer version = key.getVersion();
-
-            schemaVersionInfo = fetchSchemaVersionInfo(version, schemaMetadataInfo);
+            schemaVersionInfo = fetchSchemaVersionInfo(schemaMetadataInfo.getSchemaMetadata().getName(), version);
         } else {
             throw new IllegalArgumentException("Invalid SchemaIdVersion: " + key);
         }
 
         return schemaVersionInfo;
-    }
-
-    private SchemaMetadataInfo getSchemaMetadataInfo(Long schemaMetadataId) {
-        return schemaMetadataFetcher.getSchemaMetadataInfo(schemaMetadataId);
     }
 
     private SchemaVersionRetriever createSchemaVersionRetriever() {
@@ -572,29 +607,28 @@ public class SchemaVersionLifeCycleManager {
         };
     }
 
-
-    private SchemaVersionInfo fetchSchemaVersionInfo(Integer version,
-                                                     SchemaMetadataInfo schemaMetadataInfo) throws SchemaNotFoundException {
+    private SchemaVersionInfo fetchSchemaVersionInfo(String schemaName,
+                                                     Integer version) throws SchemaNotFoundException {
+        LOG.info("##### fetching schema version for name: [{}] version: [{}]", schemaName, version);
         SchemaVersionInfo schemaVersionInfo = null;
         if (SchemaVersionKey.LATEST_VERSION.equals(version)) {
-            schemaVersionInfo = getLatestSchemaVersionInfo(schemaMetadataInfo.getSchemaMetadata().getName());
+            schemaVersionInfo = getLatestSchemaVersionInfo(schemaName);
         } else {
-            Long schemaMetadataId = schemaMetadataInfo.getId();
             List<QueryParam> queryParams = Lists.newArrayList(
-                    new QueryParam(SchemaVersionStorable.SCHEMA_METADATA_ID, schemaMetadataId.toString()),
+                    new QueryParam(SchemaVersionStorable.NAME, schemaName),
                     new QueryParam(SchemaVersionStorable.VERSION, version.toString()));
 
             Collection<SchemaVersionStorable> versionedSchemas = storageManager.find(SchemaVersionStorable.NAME_SPACE, queryParams);
             if (versionedSchemas != null && !versionedSchemas.isEmpty()) {
                 if (versionedSchemas.size() > 1) {
-                    LOG.warn("More than one schema exists with metadataId: [{}] and version [{}]", schemaMetadataId, version);
+                    LOG.warn("More than one schema exists with name: [{}] and version [{}]", schemaName, version);
                 }
                 schemaVersionInfo = versionedSchemas.iterator().next().toSchemaVersionInfo();
             } else {
-                throw new SchemaNotFoundException("No Schema version exists with schemaMetadataId " + schemaMetadataId + " and version " + version);
+                throw new SchemaNotFoundException("No Schema version exists with name " + schemaName + " and version " + version);
             }
         }
-
+        LOG.info("##### fetched schema version info [{}]", schemaVersionInfo);
         return schemaVersionInfo;
     }
 

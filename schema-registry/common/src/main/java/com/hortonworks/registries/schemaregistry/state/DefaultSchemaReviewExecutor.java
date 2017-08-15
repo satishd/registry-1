@@ -24,20 +24,20 @@ import java.util.Map;
  */
 public class DefaultSchemaReviewExecutor implements SchemaReviewExecutor {
 
-    private SchemaLifeCycleState successState;
-    private SchemaLifeCycleState retryState;
+    private SchemaVersionLifeCycleState successState;
+    private SchemaVersionLifeCycleState retryState;
 
     @Override
-    public void init(SchemaLifeCycleState successState,
-                     SchemaLifeCycleState retryState,
+    public void init(SchemaVersionLifeCycleState successState,
+                     SchemaVersionLifeCycleState retryState,
                      Map<String, ?> props) {
         this.successState = successState;
         this.retryState = retryState;
     }
 
     @Override
-    public void execute(SchemaLifeCycleContext schemaLifeCycleContext) throws SchemaLifeCycleException, SchemaNotFoundException {
-        schemaLifeCycleContext.setState(successState);
-        schemaLifeCycleContext.updateSchemaVersionState();
+    public void execute(SchemaVersionLifeCycleContext schemaVersionLifeCycleContext) throws SchemaLifeCycleException, SchemaNotFoundException {
+        schemaVersionLifeCycleContext.setState(successState);
+        schemaVersionLifeCycleContext.updateSchemaVersionState();
     }
 }

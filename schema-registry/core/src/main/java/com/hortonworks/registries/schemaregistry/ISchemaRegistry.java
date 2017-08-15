@@ -17,7 +17,6 @@ package com.hortonworks.registries.schemaregistry;
 
 import com.hortonworks.registries.schemaregistry.errors.InvalidSchemaException;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
-import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleContext;
 import com.hortonworks.registries.storage.search.OrderBy;
 import com.hortonworks.registries.storage.search.WhereClause;
 

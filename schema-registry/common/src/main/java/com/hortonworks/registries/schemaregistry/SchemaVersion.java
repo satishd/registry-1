@@ -29,7 +29,7 @@ public class SchemaVersion implements Serializable {
 
     private String description;
     private String schemaText;
-    private Byte initialState;
+    private Byte initialState = SchemaVersionLifeCycleStates.ENABLED.id();
 
     @SuppressWarnings("unused")
     private SchemaVersion() { /* Private constructor for Jackson JSON mapping */ }
@@ -39,10 +39,12 @@ public class SchemaVersion implements Serializable {
         this.schemaText = schemaText;
     }
 
-    public SchemaVersion(String description, String schemaText, Byte initialState) {
+    public SchemaVersion(String schemaText, String description, Byte initialState) {
         this.description = description;
         this.schemaText = schemaText;
-        this.initialState = initialState != null ? initialState : SchemaVersionLifeCycleStates.ENABLED.id();
+        if(initialState != null) {
+            this.initialState = initialState;
+        }
     }
 
     public String getDescription() {

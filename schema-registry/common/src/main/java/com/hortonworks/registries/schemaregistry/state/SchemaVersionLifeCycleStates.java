@@ -126,10 +126,8 @@ public final class SchemaVersionLifeCycleStates {
 
         @Override
         public void enable(SchemaVersionLifeCycleContext context)
-                throws SchemaLifeCycleException, SchemaNotFoundException {
-            // update state
-            context.setState(ENABLED);
-            context.updateSchemaVersionState();
+                throws SchemaLifeCycleException, SchemaNotFoundException, IncompatibleSchemaException {
+            transitionToEnableState(context);
         }
 
         @Override
@@ -294,7 +292,6 @@ public final class SchemaVersionLifeCycleStates {
                                                   "Error encountered is: [%s]",
                                           compatibilityResult.getErrorLocation(),
                                           compatibilityResult.getErrorMessage());
-//                            LOG.error(errMsg);
             throw new IncompatibleSchemaException(errMsg);
         }
     }
@@ -333,7 +330,7 @@ public final class SchemaVersionLifeCycleStates {
 
     private static final class CustomState implements SchemaVersionLifeCycleState {
         @Override
-        public byte id() {
+        public Byte id() {
             return Byte.MIN_VALUE;
         }
 
@@ -350,8 +347,6 @@ public final class SchemaVersionLifeCycleStates {
 
     public static void transitionToEnableState(SchemaVersionLifeCycleContext context)
             throws SchemaNotFoundException, IncompatibleSchemaException, SchemaLifeCycleException {
-        context.setState(ENABLED);
-        //todo need to check for compatibility with all the versions.
         Long schemaVersionId = context.getSchemaVersionId();
         SchemaVersionService schemaVersionService = context.getSchemaVersionService();
 
@@ -394,6 +389,7 @@ public final class SchemaVersionLifeCycleStates {
             }
 
         }
+        context.setState(ENABLED);
         context.updateSchemaVersionState();
     }
 

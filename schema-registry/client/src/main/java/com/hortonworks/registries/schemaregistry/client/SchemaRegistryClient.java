@@ -620,8 +620,17 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
     }
 
     @Override
-    public void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        fetchSchemaVersionState(schemaVersionId, "enable");
+    public void enableSchemaVersion(Long schemaVersionId)
+            throws SchemaNotFoundException, SchemaLifeCycleException, IncompatibleSchemaException {
+        try {
+            fetchSchemaVersionState(schemaVersionId, "enable");
+        } catch (SchemaLifeCycleException e) {
+            Throwable cause = e.getCause();
+            if(cause != null && cause instanceof IncompatibleSchemaException) {
+                throw (IncompatibleSchemaException) cause;
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -672,7 +681,12 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
         } else if(status == Response.Status.NOT_FOUND.getStatusCode()) {
             throw new SchemaNotFoundException(response.readEntity(String.class));
         } else if(status == Response.Status.BAD_REQUEST.getStatusCode()) {
-            throw new SchemaLifeCycleException(response.readEntity(String.class));
+            CatalogResponse catalogResponse = readCatalogResponse(response.readEntity(String.class));
+            if(catalogResponse.getResponseCode() == CatalogResponse.ResponseMessage.INCOMPATIBLE_SCHEMA.getCode()) {
+                throw new SchemaLifeCycleException(new IncompatibleSchemaException(catalogResponse.getResponseMessage()));
+            }
+            throw new SchemaLifeCycleException(catalogResponse.getResponseMessage());
+
         } else {
             throw new RuntimeException(response.readEntity(String.class));
         }

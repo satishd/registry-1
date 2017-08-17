@@ -24,7 +24,7 @@ public interface SchemaVersionLifeCycleState {
      * @return This state's identifier. Identifiers less than 32 are reserved and 33 to 127 can be used for any custom
      * states.
      */
-    byte id();
+    Byte id();
 
     /**
      * @return name of this state

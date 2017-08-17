@@ -490,8 +490,8 @@ public class SchemaRegistryResource extends BaseRegistryResource {
         return handleLeaderAction(uriInfo, () -> {
             Response response;
             try {
-                LOG.info("schemaVersion for [{}] is [{}]", schemaName, schemaVersion);
-                SchemaIdVersion version = schemaRegistry.addSchemaVersion(schemaName, new SchemaVersion(schemaVersion.getSchemaText(), schemaVersion.getDescription()));
+                LOG.info("adding schema version for name [{}] with [{}]", schemaName, schemaVersion);
+                SchemaIdVersion version = schemaRegistry.addSchemaVersion(schemaName, schemaVersion);
                 response = WSUtils.respondEntity(version.getVersion(), Response.Status.CREATED);
             } catch (InvalidSchemaException ex) {
                 LOG.error("Invalid schema error encountered while adding schema [{}] with key [{}]", schemaVersion, schemaName, ex);
@@ -621,10 +621,13 @@ public class SchemaRegistryResource extends BaseRegistryResource {
         } catch (SchemaNotFoundException e) {
             LOG.info("No schema version is found with schema version id : [{}]", versionId);
             response = WSUtils.respond(Response.Status.NOT_FOUND, CatalogResponse.ResponseMessage.ENTITY_NOT_FOUND, versionId.toString());
+        } catch(IncompatibleSchemaException e) {
+            LOG.error("Encountered error while enabling schema version with id [{}]", versionId, e);
+            response = WSUtils.respond(Response.Status.BAD_REQUEST, CatalogResponse.ResponseMessage.INCOMPATIBLE_SCHEMA, e.getMessage());
         } catch(SchemaLifeCycleException e) {
             LOG.error("Encountered error while enabling schema version with id [{}]", versionId, e);
             response = WSUtils.respond(Response.Status.BAD_REQUEST, CatalogResponse.ResponseMessage.BAD_REQUEST, e.getMessage());
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             LOG.error("Encountered error while getting schema version with id [{}]", versionId, ex);
             response = WSUtils.respond(Response.Status.INTERNAL_SERVER_ERROR, CatalogResponse.ResponseMessage.EXCEPTION, ex.getMessage());
         }

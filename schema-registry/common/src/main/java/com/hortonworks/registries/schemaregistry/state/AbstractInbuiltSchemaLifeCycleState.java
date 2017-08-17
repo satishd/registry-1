@@ -37,7 +37,7 @@ public abstract class AbstractInbuiltSchemaLifeCycleState implements InbuiltSche
     }
 
     @Override
-    public byte id() {
+    public Byte id() {
         return id;
     }
 

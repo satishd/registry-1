@@ -124,16 +124,14 @@ public class SchemaVersionLifeCycleManager {
             if (schemaVersionInfo == null) {
                 schemaVersionInfo = createSchemaVersion(schemaMetadata,
                                                         retrievedschemaMetadataInfo.getId(),
-                                                        schemaVersion.getSchemaText(),
-                                                        schemaVersion.getDescription());
+                                                        schemaVersion);
 
             }
         } else {
             schemaMetadataId = registerSchemaMetadataFn.apply(schemaMetadata);
             schemaVersionInfo = createSchemaVersion(schemaMetadata,
                                                     schemaMetadataId,
-                                                    schemaVersion.getSchemaText(),
-                                                    schemaVersion.getDescription());
+                                                    schemaVersion);
         }
 
         return new SchemaIdVersion(schemaMetadataId, schemaVersionInfo.getVersion(), schemaVersionInfo.getId());
@@ -149,13 +147,11 @@ public class SchemaVersionLifeCycleManager {
         if (schemaMetadataInfo != null) {
             SchemaMetadata schemaMetadata = schemaMetadataInfo.getSchemaMetadata();
             // check whether the same schema text exists
-            schemaVersionInfo = findSchemaVersion(schemaMetadata.getType(), schemaVersion.getSchemaText(), schemaMetadataInfo
-                    .getId());
+            schemaVersionInfo = findSchemaVersion(schemaMetadata.getType(), schemaVersion.getSchemaText(), schemaMetadataInfo.getId());
             if (schemaVersionInfo == null) {
                 schemaVersionInfo = createSchemaVersion(schemaMetadata,
                                                         schemaMetadataInfo.getId(),
-                                                        schemaVersion.getSchemaText(),
-                                                        schemaVersion.getDescription());
+                                                        schemaVersion);
             }
         } else {
             throw new SchemaNotFoundException("Schema not found with the given schemaName: " + schemaName);
@@ -191,8 +187,7 @@ public class SchemaVersionLifeCycleManager {
 
     private SchemaVersionInfo createSchemaVersion(SchemaMetadata schemaMetadata,
                                                   Long schemaMetadataId,
-                                                  String schemaText,
-                                                  String description)
+                                                  SchemaVersion schemaVersion)
             throws IncompatibleSchemaException, InvalidSchemaException, SchemaNotFoundException {
 
         Preconditions.checkNotNull(schemaMetadataId, "schemaMetadataId must not be null");
@@ -204,7 +199,7 @@ public class SchemaVersionLifeCycleManager {
 
         // generate fingerprint, it parses the schema and checks for semantic validation.
         // throws InvalidSchemaException for invalid schemas.
-        final String fingerprint = getFingerprint(type, schemaText);
+        final String fingerprint = getFingerprint(type, schemaVersion.getSchemaText());
         final String schemaName = schemaMetadata.getName();
 
         SchemaVersionStorable schemaVersionStorable = new SchemaVersionStorable();
@@ -216,8 +211,8 @@ public class SchemaVersionLifeCycleManager {
 
         schemaVersionStorable.setName(schemaName);
 
-        schemaVersionStorable.setSchemaText(schemaText);
-        schemaVersionStorable.setDescription(description);
+        schemaVersionStorable.setSchemaText(schemaVersion.getSchemaText());
+        schemaVersionStorable.setDescription(schemaVersion.getDescription());
         schemaVersionStorable.setTimestamp(System.currentTimeMillis());
 
         schemaVersionStorable.setState(DEFAULT_VERSION_STATE.id());
@@ -229,16 +224,20 @@ public class SchemaVersionLifeCycleManager {
             while (true) {
                 try {
                     Integer version = 0;
+                    Byte initialState = schemaVersion.getInitialState();
                     if (schemaMetadata.isEvolve()) {
-                        CompatibilityResult compatibilityResult = checkCompatibility(schemaName, schemaText);
-                        if (!compatibilityResult.isCompatible()) {
-                            String errMsg = String.format("Given schema is not compatible with latest schema versions. \n" +
-                                                                  "Error location: [%s] \n" +
-                                                                  "Error encountered is: [%s]",
-                                                          compatibilityResult.getErrorLocation(),
-                                                          compatibilityResult.getErrorMessage());
-                            LOG.error(errMsg);
-                            throw new IncompatibleSchemaException(errMsg);
+                        // if the given version is added with enabled state then only check for compatibility
+                        if (SchemaVersionLifeCycleStates.ENABLED.id().equals(initialState)) {
+                            CompatibilityResult compatibilityResult = checkCompatibility(schemaName, schemaVersion.getSchemaText());
+                            if (!compatibilityResult.isCompatible()) {
+                                String errMsg = String.format("Given schema is not compatible with latest schema versions. \n" +
+                                                                      "Error location: [%s] \n" +
+                                                                      "Error encountered is: [%s]",
+                                                              compatibilityResult.getErrorLocation(),
+                                                              compatibilityResult.getErrorMessage());
+                                LOG.error(errMsg);
+                                throw new IncompatibleSchemaException(errMsg);
+                            }
                         }
                         SchemaVersionInfo latestSchemaVersionInfo = getLatestSchemaVersionInfo(schemaName);
                         if (latestSchemaVersionInfo != null) {
@@ -248,11 +247,7 @@ public class SchemaVersionLifeCycleManager {
                     schemaVersionStorable.setVersion(version + 1);
 
                     storageManager.add(schemaVersionStorable);
-                    try {
-                        DEFAULT_VERSION_STATE.enable(new SchemaVersionLifeCycleContext(schemaVersionStorable.getId(), 1, createSchemaVersionService(), schemaLifeCycleStatesRegistry));
-                    } catch (SchemaLifeCycleException e) {
-                        throw new RuntimeException(e);
-                    }
+                    updateSchemaVersionState(schemaVersionStorable.getId(), initialState);
 
                     break;
                 } catch (StorageException e) {
@@ -283,6 +278,20 @@ public class SchemaVersionLifeCycleManager {
         return schemaVersionStorable.toSchemaVersionInfo();
     }
 
+    private void updateSchemaVersionState(Long schemaVersionId, Byte initialState) throws SchemaNotFoundException {
+        try {
+            SchemaVersionLifeCycleContext schemaVersionLifeCycleContext = new SchemaVersionLifeCycleContext(schemaVersionId, 1, createSchemaVersionService(), schemaLifeCycleStatesRegistry);
+            schemaVersionLifeCycleContext.setState(getSchemaVersionLifeCycleState(initialState));
+            schemaVersionLifeCycleContext.updateSchemaVersionState();
+        } catch (SchemaLifeCycleException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private InbuiltSchemaVersionLifeCycleState getSchemaVersionLifeCycleState(Byte initialState) {
+        return (InbuiltSchemaVersionLifeCycleState) schemaLifeCycleStatesRegistry.get(initialState);
+    }
+
     private SchemaProvider getSchemaProvider(String type) {
         return schemaMetadataFetcher.getSchemaProvider(type);
     }
@@ -294,7 +303,7 @@ public class SchemaVersionLifeCycleManager {
         CompatibilityResult compatibilityResult;
         switch (validationLevel) {
             case LATEST:
-                SchemaVersionInfo latestSchemaVersionInfo = getLatestSchemaVersionInfo(schemaName);
+                SchemaVersionInfo latestSchemaVersionInfo = getLatestEnabledSchemaVersionInfo(schemaName);
                 compatibilityResult = checkCompatibility(schemaMetadata.getType(),
                                                          toSchema,
                                                          latestSchemaVersionInfo.getSchemaText(),

@@ -31,15 +31,15 @@ public interface SchemaReviewExecutor {
      * @param retryState   state to be set when review is failed.
      * @param props        any properties to be initialized with.
      */
-    public void init(SchemaVersionLifeCycleState successState,
-                     SchemaVersionLifeCycleState retryState,
+    public void init(SchemaVersionLifecycleState successState,
+                     SchemaVersionLifecycleState retryState,
                      Map<String, ?> props);
 
     /**
-     * Execute custom review logic for the given {@code schemaVersionLifeCycleContext} and update with respective state
-     * when it is is successfully executed by using {@link SchemaVersionLifeCycleContext#updateSchemaVersionState()}.
+     * Execute custom review logic for the given {@code schemaVersionLifecycleContext} and update with respective state
+     * when it is is successfully executed by using {@link SchemaVersionLifecycleContext#updateSchemaVersionState()}.
      *
-     * @param schemaVersionLifeCycleContext
+     * @param schemaVersionLifecycleContext
      */
-    public void execute(SchemaVersionLifeCycleContext schemaVersionLifeCycleContext) throws SchemaLifeCycleException, SchemaNotFoundException;
+    public void execute(SchemaVersionLifecycleContext schemaVersionLifecycleContext) throws SchemaLifecycleException, SchemaNotFoundException;
 }

@@ -39,38 +39,38 @@ import java.util.stream.Collectors;
  * changes its state till it finally reaches the terminal states. Once it reaches the terminal state, those entries
  * can be removed after a configured time. This may be useful for looking at changes of the schema version history.
  */
-public final class SchemaVersionLifeCycleStates {
+public final class SchemaVersionLifecycleStates {
 
-    public static final InbuiltSchemaVersionLifeCycleState INITIATED = new InitiatedState();
-    public static final InbuiltSchemaVersionLifeCycleState START_REVIEW = new StartReviewState();
-    public static final InbuiltSchemaVersionLifeCycleState CHANGES_REQUIRED = new ChangesRequiredState();
-    public static final InbuiltSchemaVersionLifeCycleState REVIEWED = new ReviewedState();
-    public static final InbuiltSchemaVersionLifeCycleState ENABLED = new EnabledState();
-    public static final InbuiltSchemaVersionLifeCycleState DISABLED = new DisabledState();
-    public static final InbuiltSchemaVersionLifeCycleState ARCHIVED = new ArchivedState();
-    public static final InbuiltSchemaVersionLifeCycleState DELETED = new DeletedState();
-    public static final SchemaVersionLifeCycleState CUSTOM_STATE = new CustomState();
+    public static final InbuiltSchemaVersionLifecycleState INITIATED = new InitiatedState();
+    public static final InbuiltSchemaVersionLifecycleState START_REVIEW = new StartReviewState();
+    public static final InbuiltSchemaVersionLifecycleState CHANGES_REQUIRED = new ChangesRequiredState();
+    public static final InbuiltSchemaVersionLifecycleState REVIEWED = new ReviewedState();
+    public static final InbuiltSchemaVersionLifecycleState ENABLED = new EnabledState();
+    public static final InbuiltSchemaVersionLifecycleState DISABLED = new DisabledState();
+    public static final InbuiltSchemaVersionLifecycleState ARCHIVED = new ArchivedState();
+    public static final InbuiltSchemaVersionLifecycleState DELETED = new DeletedState();
+    public static final SchemaVersionLifecycleState CUSTOM_STATE = new CustomState();
 
     /**
-     * Registry of states which contain inbuilt ones and customs states can be registered with {@link #register(SchemaVersionLifeCycleState)}.
+     * Registry of states which contain inbuilt ones and customs states can be registered with {@link #register(SchemaVersionLifecycleState)}.
      */
     public static class Registry {
 
-        ConcurrentMap<Byte, SchemaVersionLifeCycleState> states = new ConcurrentHashMap<>();
+        ConcurrentMap<Byte, SchemaVersionLifecycleState> states = new ConcurrentHashMap<>();
 
         public Registry() {
             registerInBuiltStates();
         }
 
         private void registerInBuiltStates() {
-            Field[] declaredFields = SchemaVersionLifeCycleStates.class.getDeclaredFields();
+            Field[] declaredFields = SchemaVersionLifecycleStates.class.getDeclaredFields();
             for (Field field : declaredFields) {
                 if (Modifier.isFinal(field.getModifiers()) &&
                         Modifier.isStatic(field.getModifiers()) &&
-                        InbuiltSchemaVersionLifeCycleState.class.isAssignableFrom(field.getType())) {
-                    InbuiltSchemaVersionLifeCycleState state = null;
+                        InbuiltSchemaVersionLifecycleState.class.isAssignableFrom(field.getType())) {
+                    InbuiltSchemaVersionLifecycleState state = null;
                     try {
-                        state = (InbuiltSchemaVersionLifeCycleState) field.get(null);
+                        state = (InbuiltSchemaVersionLifecycleState) field.get(null);
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
@@ -86,8 +86,8 @@ public final class SchemaVersionLifeCycleStates {
          *
          * @throws IllegalArgumentException if the given state is already registered.
          */
-        public void register(SchemaVersionLifeCycleState state) {
-            SchemaVersionLifeCycleState prevState = states.putIfAbsent(state.id(), state);
+        public void register(SchemaVersionLifecycleState state) {
+            SchemaVersionLifecycleState prevState = states.putIfAbsent(state.id(), state);
             if (prevState == state) {
                 throw new IllegalArgumentException("Given state is already registered as " + prevState);
             }
@@ -102,13 +102,13 @@ public final class SchemaVersionLifeCycleStates {
             return states.remove(stateId) != null;
         }
 
-        public SchemaVersionLifeCycleState get(Byte stateId) {
+        public SchemaVersionLifecycleState get(Byte stateId) {
             return states.get(stateId);
         }
 
     }
 
-    private static final class InitiatedState extends AbstractInbuiltSchemaLifeCycleState {
+    private static final class InitiatedState extends AbstractInbuiltSchemaLifecycleState {
 
         private InitiatedState() {
             super("INITIATED", (byte) 1, "Schema version is initialized, It can either go to review or enabled states.", Lists
@@ -116,17 +116,17 @@ public final class SchemaVersionLifeCycleStates {
         }
 
         @Override
-        public void startReview(SchemaVersionLifeCycleContext context,
+        public void startReview(SchemaVersionLifecycleContext context,
                                 SchemaReviewExecutor schemaReviewExecutor)
-                throws SchemaLifeCycleException, SchemaNotFoundException {
+                throws SchemaLifecycleException, SchemaNotFoundException {
             context.setState(START_REVIEW);
             // get review state executor and
             context.updateSchemaVersionState();
         }
 
         @Override
-        public void enable(SchemaVersionLifeCycleContext context)
-                throws SchemaLifeCycleException, SchemaNotFoundException, IncompatibleSchemaException {
+        public void enable(SchemaVersionLifecycleContext context)
+                throws SchemaLifecycleException, SchemaNotFoundException, IncompatibleSchemaException {
             transitionToEnableState(context);
         }
 
@@ -136,7 +136,7 @@ public final class SchemaVersionLifeCycleStates {
         }
     }
 
-    private static final class StartReviewState extends AbstractInbuiltSchemaLifeCycleState {
+    private static final class StartReviewState extends AbstractInbuiltSchemaLifecycleState {
         // schemaReviewExecutor is given successful and failure states.
         // it should invoke custom state and return to success/failure state eventually.
 
@@ -145,9 +145,9 @@ public final class SchemaVersionLifeCycleStates {
                     .singletonList(CUSTOM_STATE));
         }
 
-        public void startReview(SchemaVersionLifeCycleContext context,
+        public void startReview(SchemaVersionLifecycleContext context,
                                 SchemaReviewExecutor schemaReviewExecutor)
-                throws SchemaLifeCycleException, SchemaNotFoundException {
+                throws SchemaLifecycleException, SchemaNotFoundException {
             schemaReviewExecutor.execute(context);
         }
 
@@ -158,7 +158,7 @@ public final class SchemaVersionLifeCycleStates {
 
     }
 
-    private static final class ChangesRequiredState extends AbstractInbuiltSchemaLifeCycleState {
+    private static final class ChangesRequiredState extends AbstractInbuiltSchemaLifecycleState {
 
         public ChangesRequiredState() {
             super("ChangesRequired",
@@ -168,17 +168,17 @@ public final class SchemaVersionLifeCycleStates {
         }
 
         @Override
-        public void startReview(SchemaVersionLifeCycleContext context,
+        public void startReview(SchemaVersionLifecycleContext context,
                                 SchemaReviewExecutor schemaReviewExecutor)
-                throws SchemaLifeCycleException, SchemaNotFoundException {
+                throws SchemaLifecycleException, SchemaNotFoundException {
             context.setState(START_REVIEW);
             // execute start review process, updation of the state should be done by schemaReviewExecutor
             schemaReviewExecutor.execute(context);
         }
 
         @Override
-        public void delete(SchemaVersionLifeCycleContext context)
-                throws SchemaLifeCycleException, SchemaNotFoundException {
+        public void delete(SchemaVersionLifecycleContext context)
+                throws SchemaLifecycleException, SchemaNotFoundException {
             context.setState(DELETED);
             context.getSchemaVersionService().deleteSchemaVersion(context.getSchemaVersionId());
             context.updateSchemaVersionState();
@@ -191,7 +191,7 @@ public final class SchemaVersionLifeCycleStates {
 
     }
 
-    private static final class ReviewedState extends AbstractInbuiltSchemaLifeCycleState {
+    private static final class ReviewedState extends AbstractInbuiltSchemaLifecycleState {
 
         private ReviewedState() {
             super("ReviewedState",
@@ -201,14 +201,14 @@ public final class SchemaVersionLifeCycleStates {
         }
 
         @Override
-        public void enable(SchemaVersionLifeCycleContext context)
-                throws SchemaLifeCycleException, SchemaNotFoundException, IncompatibleSchemaException {
+        public void enable(SchemaVersionLifecycleContext context)
+                throws SchemaLifecycleException, SchemaNotFoundException, IncompatibleSchemaException {
             transitionToEnableState(context);
         }
 
         @Override
-        public void archive(SchemaVersionLifeCycleContext context)
-                throws SchemaLifeCycleException, SchemaNotFoundException {
+        public void archive(SchemaVersionLifecycleContext context)
+                throws SchemaLifecycleException, SchemaNotFoundException {
             context.setState(ARCHIVED);
             context.updateSchemaVersionState();
         }
@@ -220,7 +220,7 @@ public final class SchemaVersionLifeCycleStates {
 
     }
 
-    private static final class EnabledState extends AbstractInbuiltSchemaLifeCycleState {
+    private static final class EnabledState extends AbstractInbuiltSchemaLifecycleState {
 
         private EnabledState() {
             super("Enabled",
@@ -230,15 +230,15 @@ public final class SchemaVersionLifeCycleStates {
         }
 
         @Override
-        public void disable(SchemaVersionLifeCycleContext context)
-                throws SchemaLifeCycleException, SchemaNotFoundException {
+        public void disable(SchemaVersionLifecycleContext context)
+                throws SchemaLifecycleException, SchemaNotFoundException {
             context.setState(DISABLED);
             context.updateSchemaVersionState();
         }
 
         @Override
-        public void archive(SchemaVersionLifeCycleContext context)
-                throws SchemaLifeCycleException, SchemaNotFoundException {
+        public void archive(SchemaVersionLifecycleContext context)
+                throws SchemaLifecycleException, SchemaNotFoundException {
             context.setState(ARCHIVED);
             context.updateSchemaVersionState();
         }
@@ -250,7 +250,7 @@ public final class SchemaVersionLifeCycleStates {
 
     }
 
-    private static final class DisabledState extends AbstractInbuiltSchemaLifeCycleState {
+    private static final class DisabledState extends AbstractInbuiltSchemaLifecycleState {
         private DisabledState() {
             super("Disabled",
                   (byte) 6,
@@ -259,14 +259,14 @@ public final class SchemaVersionLifeCycleStates {
         }
 
         @Override
-        public void enable(SchemaVersionLifeCycleContext context)
-                throws SchemaLifeCycleException, SchemaNotFoundException, IncompatibleSchemaException {
+        public void enable(SchemaVersionLifecycleContext context)
+                throws SchemaLifecycleException, SchemaNotFoundException, IncompatibleSchemaException {
             transitionToEnableState(context);
         }
 
         @Override
-        public void archive(SchemaVersionLifeCycleContext context)
-                throws SchemaLifeCycleException, SchemaNotFoundException {
+        public void archive(SchemaVersionLifecycleContext context)
+                throws SchemaLifecycleException, SchemaNotFoundException {
             context.setState(ARCHIVED);
             context.updateSchemaVersionState();
         }
@@ -296,7 +296,7 @@ public final class SchemaVersionLifeCycleStates {
         }
     }
 
-    private static final class ArchivedState extends AbstractInbuiltSchemaLifeCycleState {
+    private static final class ArchivedState extends AbstractInbuiltSchemaLifecycleState {
         // TERMINAL STATE
         private ArchivedState() {
             super("Archived",
@@ -312,7 +312,7 @@ public final class SchemaVersionLifeCycleStates {
 
     }
 
-    private static final class DeletedState extends AbstractInbuiltSchemaLifeCycleState {
+    private static final class DeletedState extends AbstractInbuiltSchemaLifecycleState {
         // TERMINAL STATE
         private DeletedState() {
             super("Deleted",
@@ -328,7 +328,7 @@ public final class SchemaVersionLifeCycleStates {
 
     }
 
-    private static final class CustomState implements SchemaVersionLifeCycleState {
+    private static final class CustomState implements SchemaVersionLifecycleState {
         @Override
         public Byte id() {
             return Byte.MIN_VALUE;
@@ -345,8 +345,8 @@ public final class SchemaVersionLifeCycleStates {
         }
     }
 
-    public static void transitionToEnableState(SchemaVersionLifeCycleContext context)
-            throws SchemaNotFoundException, IncompatibleSchemaException, SchemaLifeCycleException {
+    public static void transitionToEnableState(SchemaVersionLifecycleContext context)
+            throws SchemaNotFoundException, IncompatibleSchemaException, SchemaLifecycleException {
         Long schemaVersionId = context.getSchemaVersionId();
         SchemaVersionService schemaVersionService = context.getSchemaVersionService();
 
@@ -361,7 +361,7 @@ public final class SchemaVersionLifeCycleStates {
         List<SchemaVersionInfo> allEnabledSchemaVersions =
                 schemaVersionService.getAllSchemaVersions(schemaName)
                                     .stream()
-                                    .filter(x -> SchemaVersionLifeCycleStates.ENABLED.id().equals(x.getStateId()))
+                                    .filter(x -> SchemaVersionLifecycleStates.ENABLED.id().equals(x.getStateId()))
                                     .collect(Collectors.toList());
 
         if(!allEnabledSchemaVersions.isEmpty()) {

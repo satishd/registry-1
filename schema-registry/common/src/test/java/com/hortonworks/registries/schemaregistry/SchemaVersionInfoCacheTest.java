@@ -17,7 +17,7 @@ package com.hortonworks.registries.schemaregistry;
 
 import com.google.common.collect.Sets;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
-import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifeCycleStates;
+import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifecycleStates;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -41,7 +41,7 @@ public class SchemaVersionInfoCacheTest {
         Integer version = 2;
         long schemaVersionId = 3L;
         SchemaVersionInfo schemaVersionInfo = new SchemaVersionInfo(schemaVersionId, schemaName, version, schemaMetadataId, "schema-text", System
-                .currentTimeMillis(), "schema-description", SchemaVersionLifeCycleStates.ENABLED.id());
+                .currentTimeMillis(), "schema-description", SchemaVersionLifecycleStates.ENABLED.id());
         SchemaIdVersion withVersionId = new SchemaIdVersion(schemaVersionId);
         SchemaIdVersion withMetaIdAndVersion = new SchemaIdVersion(schemaMetadataId, version);
         SchemaIdVersion withBoth = new SchemaIdVersion(schemaMetadataId, version, schemaVersionId);
@@ -51,7 +51,7 @@ public class SchemaVersionInfoCacheTest {
         allIdVersions.stream().forEach(x -> schemaIdWithVersionInfo.put(x, schemaVersionInfo));
 
         SchemaVersionInfo otherSchemaVersionInfo = new SchemaVersionInfo(schemaVersionId + 1, "other-" + schemaName, version, schemaMetadataId+1L, "other-schema-text", System
-                .currentTimeMillis(), "schema-description", SchemaVersionLifeCycleStates.ENABLED.id());
+                .currentTimeMillis(), "schema-description", SchemaVersionLifecycleStates.ENABLED.id());
         SchemaIdVersion otherIdVersion = new SchemaIdVersion(otherSchemaVersionInfo.getId());
         SchemaVersionKey otherSchemaVersionKey = new SchemaVersionKey(otherSchemaVersionInfo.getName(), otherSchemaVersionInfo
                 .getVersion());

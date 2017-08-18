@@ -16,23 +16,27 @@
 package com.hortonworks.registries.schemaregistry.state;
 
 /**
- * Schema version life cycle state to be defined.
+ *
  */
-public interface SchemaVersionLifeCycleState {
+public class SchemaLifecycleException extends Exception {
+    private static final long serialVersionUID = -8309676034723349946L;
 
-    /**
-     * @return This state's identifier. Identifiers less than 32 are reserved and 33 to 127 can be used for any custom
-     * states.
-     */
-    Byte id();
+    public SchemaLifecycleException() {
+    }
 
-    /**
-     * @return name of this state
-     */
-    String name();
+    public SchemaLifecycleException(String message) {
+        super(message);
+    }
 
-    /**
-     * @return description about this state
-     */
-    String description();
+    public SchemaLifecycleException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SchemaLifecycleException(Throwable cause) {
+        super(cause);
+    }
+
+    public SchemaLifecycleException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

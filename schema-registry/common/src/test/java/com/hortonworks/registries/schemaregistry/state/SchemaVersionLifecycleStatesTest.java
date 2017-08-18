@@ -38,13 +38,13 @@ import java.util.Random;
  *
  */
 @Ignore
-public class SchemaVersionLifeCycleStatesTest {
-    private static Logger LOG = LoggerFactory.getLogger(SchemaVersionLifeCycleStatesTest.class);
+public class SchemaVersionLifecycleStatesTest {
+    private static Logger LOG = LoggerFactory.getLogger(SchemaVersionLifecycleStatesTest.class);
 
     @Rule
     public TestName testName = new TestName();
 
-    private SchemaVersionLifeCycleContext context;
+    private SchemaVersionLifecycleContext context;
 
     @Before
     public void setup() {
@@ -55,11 +55,11 @@ public class SchemaVersionLifeCycleStatesTest {
         SchemaVersionInfo schemaVersionInfo =
                 new SchemaVersionInfo(new Random().nextLong(), schemaMetadata.getName(), 1, schemaMetadataInfo.getId(),
                                       "{\"type\":\"string\"}", System.currentTimeMillis(),
-                                      "", SchemaVersionLifeCycleStates.ENABLED.id());
+                                      "", SchemaVersionLifecycleStates.ENABLED.id());
 
         SchemaVersionService schemaVersionServiceMock = new SchemaVersionService() {
             @Override
-            public void updateSchemaVersionState(SchemaVersionLifeCycleContext schemaLifeCycleContext) {
+            public void updateSchemaVersionState(SchemaVersionLifecycleContext schemaLifeCycleContext) {
                 LOG.info("Updating schema version: [{}]", schemaLifeCycleContext);
             }
 
@@ -91,13 +91,13 @@ public class SchemaVersionLifeCycleStatesTest {
             }
 
         };
-        context = new SchemaVersionLifeCycleContext(schemaVersionInfo.getId(), 1, schemaVersionServiceMock, new SchemaVersionLifeCycleStates.Registry());
+        context = new SchemaVersionLifecycleContext(schemaVersionInfo.getId(), 1, schemaVersionServiceMock, new SchemaVersionLifecycleStates.Registry());
     }
 
     @Test
     public void testInitiatedState() throws Exception {
 
-        InbuiltSchemaVersionLifeCycleState initiated = SchemaVersionLifeCycleStates.INITIATED;
+        InbuiltSchemaVersionLifecycleState initiated = SchemaVersionLifecycleStates.INITIATED;
 
         DefaultSchemaReviewExecutor schemaReviewExecutor = createDefaultSchemaReviewExecutor();
         initiated.startReview(context, schemaReviewExecutor);
@@ -110,14 +110,14 @@ public class SchemaVersionLifeCycleStatesTest {
 
     private DefaultSchemaReviewExecutor createDefaultSchemaReviewExecutor() {
         DefaultSchemaReviewExecutor schemaReviewExecutor = new DefaultSchemaReviewExecutor();
-        schemaReviewExecutor.init(SchemaVersionLifeCycleStates.REVIEWED, SchemaVersionLifeCycleStates.CHANGES_REQUIRED, Collections.emptyMap());
+        schemaReviewExecutor.init(SchemaVersionLifecycleStates.REVIEWED, SchemaVersionLifecycleStates.CHANGES_REQUIRED, Collections.emptyMap());
         return schemaReviewExecutor;
     }
 
     @Test
     public void testEnabledState() throws Exception {
 
-        InbuiltSchemaVersionLifeCycleState enabled = SchemaVersionLifeCycleStates.ENABLED;
+        InbuiltSchemaVersionLifecycleState enabled = SchemaVersionLifecycleStates.ENABLED;
 
         enabled.disable(context);
         enabled.archive(context);
@@ -131,7 +131,7 @@ public class SchemaVersionLifeCycleStatesTest {
     @Test
     public void testDisabledState() throws Exception {
 
-        InbuiltSchemaVersionLifeCycleState disabled = SchemaVersionLifeCycleStates.DISABLED;
+        InbuiltSchemaVersionLifecycleState disabled = SchemaVersionLifecycleStates.DISABLED;
 
         disabled.enable(context);
         disabled.archive(context);
@@ -144,7 +144,7 @@ public class SchemaVersionLifeCycleStatesTest {
     @Test
     public void testArchivedState() throws Exception {
 
-        InbuiltSchemaVersionLifeCycleState archived = SchemaVersionLifeCycleStates.ARCHIVED;
+        InbuiltSchemaVersionLifecycleState archived = SchemaVersionLifecycleStates.ARCHIVED;
 
         checkStartReviewNotSupported(archived, context);
         checkEnableNotSupported(archived, context);
@@ -156,7 +156,7 @@ public class SchemaVersionLifeCycleStatesTest {
     @Test
     public void testDeletedState() throws Exception {
 
-        InbuiltSchemaVersionLifeCycleState deleted = SchemaVersionLifeCycleStates.DELETED;
+        InbuiltSchemaVersionLifecycleState deleted = SchemaVersionLifecycleStates.DELETED;
 
         checkStartReviewNotSupported(deleted, context);
         checkEnableNotSupported(deleted, context);
@@ -165,49 +165,49 @@ public class SchemaVersionLifeCycleStatesTest {
         checkDeleteNotSupported(deleted, context);
     }
 
-    private void checkArchiveNotSupported(InbuiltSchemaVersionLifeCycleState state,
-                                          SchemaVersionLifeCycleContext context) throws SchemaNotFoundException {
+    private void checkArchiveNotSupported(InbuiltSchemaVersionLifecycleState state,
+                                          SchemaVersionLifecycleContext context) throws SchemaNotFoundException {
         try {
             state.archive(context);
             Assert.fail(state.name() + " should not lead to archive state");
-        } catch (SchemaLifeCycleException e) {
+        } catch (SchemaLifecycleException e) {
         }
     }
 
 
-    private void checkDeleteNotSupported(InbuiltSchemaVersionLifeCycleState state,
-                                         SchemaVersionLifeCycleContext context) throws SchemaNotFoundException {
+    private void checkDeleteNotSupported(InbuiltSchemaVersionLifecycleState state,
+                                         SchemaVersionLifecycleContext context) throws SchemaNotFoundException {
         try {
             state.delete(context);
             Assert.fail(state.name() + " should not lead to delete state");
-        } catch (SchemaLifeCycleException e) {
+        } catch (SchemaLifecycleException e) {
         }
     }
 
-    private void checkDisableNotSupported(InbuiltSchemaVersionLifeCycleState state,
-                                          SchemaVersionLifeCycleContext context) throws SchemaNotFoundException {
+    private void checkDisableNotSupported(InbuiltSchemaVersionLifecycleState state,
+                                          SchemaVersionLifecycleContext context) throws SchemaNotFoundException {
         try {
             state.disable(context);
             Assert.fail(state.name() + " should not lead to disabled state");
-        } catch (SchemaLifeCycleException e) {
+        } catch (SchemaLifecycleException e) {
         }
     }
 
-    private void checkEnableNotSupported(InbuiltSchemaVersionLifeCycleState state,
-                                         SchemaVersionLifeCycleContext context) throws SchemaNotFoundException, IncompatibleSchemaException {
+    private void checkEnableNotSupported(InbuiltSchemaVersionLifecycleState state,
+                                         SchemaVersionLifecycleContext context) throws SchemaNotFoundException, IncompatibleSchemaException {
         try {
             state.enable(context);
             Assert.fail(state.name() + " should not lead to enable state");
-        } catch (SchemaLifeCycleException e) {
+        } catch (SchemaLifecycleException e) {
         }
     }
 
-    private void checkStartReviewNotSupported(InbuiltSchemaVersionLifeCycleState state,
-                                              SchemaVersionLifeCycleContext context) throws SchemaNotFoundException {
+    private void checkStartReviewNotSupported(InbuiltSchemaVersionLifecycleState state,
+                                              SchemaVersionLifecycleContext context) throws SchemaNotFoundException {
         try {
             state.startReview(context, createDefaultSchemaReviewExecutor());
             Assert.fail(state.name() + " should not lead to startReview state");
-        } catch (SchemaLifeCycleException e) {
+        } catch (SchemaLifecycleException e) {
         }
     }
 }

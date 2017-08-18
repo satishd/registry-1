@@ -28,7 +28,7 @@ import java.util.Collection;
  */
 public interface SchemaVersionService {
 
-    public void updateSchemaVersionState(SchemaVersionLifeCycleContext schemaVersionLifeCycleContext) throws SchemaNotFoundException;
+    public void updateSchemaVersionState(SchemaVersionLifecycleContext schemaVersionLifecycleContext) throws SchemaNotFoundException;
 
     public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException;
 

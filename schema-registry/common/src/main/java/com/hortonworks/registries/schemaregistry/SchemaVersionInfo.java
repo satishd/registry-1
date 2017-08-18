@@ -16,7 +16,7 @@
 package com.hortonworks.registries.schemaregistry;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifeCycleStates;
+import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifecycleStates;
 
 import java.io.Serializable;
 
@@ -95,7 +95,7 @@ public final class SchemaVersionInfo implements Serializable {
         this.version = version;
         this.schemaText = schemaText;
         this.timestamp = timestamp;
-        this.stateId = stateId == null ? SchemaVersionLifeCycleStates.ENABLED.id() : stateId;
+        this.stateId = stateId == null ? SchemaVersionLifecycleStates.ENABLED.id() : stateId;
     }
 
     public Long getId() {

@@ -47,7 +47,7 @@ import com.hortonworks.registries.schemaregistry.serde.SnapshotSerializer;
 import com.hortonworks.registries.schemaregistry.serde.pull.PullDeserializer;
 import com.hortonworks.registries.schemaregistry.serde.pull.PullSerializer;
 import com.hortonworks.registries.schemaregistry.serde.push.PushDeserializer;
-import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleException;
+import com.hortonworks.registries.schemaregistry.state.SchemaLifecycleException;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
@@ -621,10 +621,10 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
 
     @Override
     public void enableSchemaVersion(Long schemaVersionId)
-            throws SchemaNotFoundException, SchemaLifeCycleException, IncompatibleSchemaException {
+            throws SchemaNotFoundException, SchemaLifecycleException, IncompatibleSchemaException {
         try {
             fetchSchemaVersionState(schemaVersionId, "enable");
-        } catch (SchemaLifeCycleException e) {
+        } catch (SchemaLifecycleException e) {
             Throwable cause = e.getCause();
             if(cause != null && cause instanceof IncompatibleSchemaException) {
                 throw (IncompatibleSchemaException) cause;
@@ -634,28 +634,28 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
     }
 
     @Override
-    public void disableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+    public void disableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
         fetchSchemaVersionState(schemaVersionId, "disable");
     }
 
     @Override
-    public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+    public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
         fetchSchemaVersionState(schemaVersionId, "delete");
     }
 
     @Override
-    public void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+    public void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
         fetchSchemaVersionState(schemaVersionId, "archive");
     }
 
     @Override
-    public void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
+    public void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
         fetchSchemaVersionState(schemaVersionId, "startReview");
 
     }
 
     private boolean fetchSchemaVersionState(Long schemaVersionId,
-                                            String operation) throws SchemaNotFoundException, SchemaLifeCycleException {
+                                            String operation) throws SchemaNotFoundException, SchemaLifecycleException {
 
         WebTarget webTarget = currentSchemaRegistryTargets().schemaVersionsByIdTarget.path(schemaVersionId + "/states/" + operation);
         Response response = Subject.doAs(subject, new PrivilegedAction<Response>() {
@@ -673,7 +673,7 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
         return result;
     }
 
-    private boolean handleSchemaLifeCycleResponse(Response response) throws SchemaNotFoundException, SchemaLifeCycleException {
+    private boolean handleSchemaLifeCycleResponse(Response response) throws SchemaNotFoundException, SchemaLifecycleException {
         boolean result;
         int status = response.getStatus();
         if(status == Response.Status.OK.getStatusCode()) {
@@ -683,9 +683,9 @@ public class SchemaRegistryClient implements ISchemaRegistryClient {
         } else if(status == Response.Status.BAD_REQUEST.getStatusCode()) {
             CatalogResponse catalogResponse = readCatalogResponse(response.readEntity(String.class));
             if(catalogResponse.getResponseCode() == CatalogResponse.ResponseMessage.INCOMPATIBLE_SCHEMA.getCode()) {
-                throw new SchemaLifeCycleException(new IncompatibleSchemaException(catalogResponse.getResponseMessage()));
+                throw new SchemaLifecycleException(new IncompatibleSchemaException(catalogResponse.getResponseMessage()));
             }
-            throw new SchemaLifeCycleException(catalogResponse.getResponseMessage());
+            throw new SchemaLifecycleException(catalogResponse.getResponseMessage());
 
         } else {
             throw new RuntimeException(response.readEntity(String.class));

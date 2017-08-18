@@ -16,7 +16,7 @@
 package com.hortonworks.registries.schemaregistry;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifeCycleStates;
+import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifecycleStates;
 
 import java.io.Serializable;
 
@@ -29,7 +29,7 @@ public class SchemaVersion implements Serializable {
 
     private String description;
     private String schemaText;
-    private Byte initialState = SchemaVersionLifeCycleStates.ENABLED.id();
+    private Byte initialState = SchemaVersionLifecycleStates.ENABLED.id();
 
     @SuppressWarnings("unused")
     private SchemaVersion() { /* Private constructor for Jackson JSON mapping */ }

@@ -20,16 +20,16 @@ import java.util.List;
 /**
  *
  */
-public abstract class AbstractInbuiltSchemaLifeCycleState implements InbuiltSchemaVersionLifeCycleState {
+public abstract class AbstractInbuiltSchemaLifecycleState implements InbuiltSchemaVersionLifecycleState {
     private final String name;
     private final byte id;
     private final String description;
-    private final List<SchemaVersionLifeCycleState> nextStates;
+    private final List<SchemaVersionLifecycleState> nextStates;
 
-    protected AbstractInbuiltSchemaLifeCycleState(String name,
+    protected AbstractInbuiltSchemaLifecycleState(String name,
                                                   byte id,
                                                   String description,
-                                                  List<SchemaVersionLifeCycleState> nextStates) {
+                                                  List<SchemaVersionLifecycleState> nextStates) {
         this.name = name;
         this.id = id;
         this.description = description;
@@ -52,7 +52,7 @@ public abstract class AbstractInbuiltSchemaLifeCycleState implements InbuiltSche
     }
 
     @Override
-    public List<SchemaVersionLifeCycleState> nextStates() {
+    public List<SchemaVersionLifecycleState> nextStates() {
         return nextStates;
     }
 
@@ -61,7 +61,7 @@ public abstract class AbstractInbuiltSchemaLifeCycleState implements InbuiltSche
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AbstractInbuiltSchemaLifeCycleState that = (AbstractInbuiltSchemaLifeCycleState) o;
+        AbstractInbuiltSchemaLifecycleState that = (AbstractInbuiltSchemaLifecycleState) o;
 
         if (id != that.id) return false;
         return name != null ? name.equals(that.name) : that.name == null;

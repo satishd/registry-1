@@ -22,7 +22,7 @@ import com.hortonworks.registries.schemaregistry.errors.InvalidSchemaException;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import com.hortonworks.registries.schemaregistry.errors.UnsupportedSchemaTypeException;
 import com.hortonworks.registries.schemaregistry.serde.SerDesException;
-import com.hortonworks.registries.schemaregistry.state.SchemaLifeCycleException;
+import com.hortonworks.registries.schemaregistry.state.SchemaLifecycleException;
 import com.hortonworks.registries.storage.OrderByField;
 import com.hortonworks.registries.storage.Storable;
 import com.hortonworks.registries.storage.StorableKey;
@@ -60,7 +60,7 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
 
     private Map<String, SchemaProvider> schemaTypeWithProviders;
     private List<SchemaProviderInfo> schemaProviderInfos;
-    private SchemaVersionLifeCycleManager schemaVersionLifeCycleManager;
+    private SchemaVersionLifecycleManager schemaVersionLifecycleManager;
 
     public DefaultSchemaRegistry(StorageManager storageManager,
                                  FileStorage fileStorage,
@@ -83,12 +83,12 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
                         SchemaSerDesMapping.class));
 
         SchemaMetadataFetcher schemaMetadataFetcher = createSchemaMetadataFetcher();
-        schemaVersionLifeCycleManager = new SchemaVersionLifeCycleManager(storageManager,
+        schemaVersionLifecycleManager = new SchemaVersionLifecycleManager(storageManager,
                                                                           props,
                                                                           schemaMetadataFetcher);
 
         Collection<? extends SchemaProvider> schemaProviders = initSchemaProviders(schemaProvidersConfig,
-                                                                                   schemaVersionLifeCycleManager.getSchemaVersionRetriever());
+                                                                                   schemaVersionLifecycleManager.getSchemaVersionRetriever());
 
         this.schemaTypeWithProviders = schemaProviders.stream()
                                                       .collect(Collectors.toMap(SchemaProvider::getType,
@@ -390,78 +390,78 @@ public class DefaultSchemaRegistry implements ISchemaRegistry {
     public SchemaIdVersion addSchemaVersion(SchemaMetadata schemaMetadata,
                                             SchemaVersion schemaVersion)
             throws IncompatibleSchemaException, InvalidSchemaException, SchemaNotFoundException {
-        return schemaVersionLifeCycleManager.addSchemaVersion(schemaMetadata, schemaVersion, x -> registerSchemaMetadata(x));
+        return schemaVersionLifecycleManager.addSchemaVersion(schemaMetadata, schemaVersion, x -> registerSchemaMetadata(x));
     }
 
     public SchemaIdVersion addSchemaVersion(String schemaName,
                                             SchemaVersion schemaVersion)
             throws SchemaNotFoundException, IncompatibleSchemaException, InvalidSchemaException {
-        return schemaVersionLifeCycleManager.addSchemaVersion(schemaName, schemaVersion);
+        return schemaVersionLifecycleManager.addSchemaVersion(schemaName, schemaVersion);
     }
 
     @Override
     public Collection<SchemaVersionInfo> getAllVersions(final String schemaName) throws SchemaNotFoundException {
-        return schemaVersionLifeCycleManager.getAllVersions(schemaName);
+        return schemaVersionLifecycleManager.getAllVersions(schemaName);
     }
 
     @Override
     public SchemaVersionInfo getSchemaVersionInfo(String schemaName,
                                                   String schemaText) throws SchemaNotFoundException, InvalidSchemaException {
-        return schemaVersionLifeCycleManager.getSchemaVersionInfo(schemaName, schemaText);
+        return schemaVersionLifecycleManager.getSchemaVersionInfo(schemaName, schemaText);
     }
 
     @Override
     public SchemaVersionInfo getSchemaVersionInfo(SchemaIdVersion schemaIdVersion) throws SchemaNotFoundException {
-        return schemaVersionLifeCycleManager.getSchemaVersionInfo(schemaIdVersion);
+        return schemaVersionLifecycleManager.getSchemaVersionInfo(schemaIdVersion);
     }
 
     @Override
     public SchemaVersionInfo getSchemaVersionInfo(SchemaVersionKey schemaVersionKey) throws SchemaNotFoundException {
-        return schemaVersionLifeCycleManager.getSchemaVersionInfo(schemaVersionKey);
+        return schemaVersionLifecycleManager.getSchemaVersionInfo(schemaVersionKey);
     }
 
     @Override
     public void deleteSchemaVersion(SchemaVersionKey schemaVersionKey) throws SchemaNotFoundException {
-        schemaVersionLifeCycleManager.deleteSchemaVersion(schemaVersionKey);
+        schemaVersionLifecycleManager.deleteSchemaVersion(schemaVersionKey);
     }
 
     @Override
-    public void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException, IncompatibleSchemaException {
-        schemaVersionLifeCycleManager.enableSchemaVersion(schemaVersionId);
+    public void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException, IncompatibleSchemaException {
+        schemaVersionLifecycleManager.enableSchemaVersion(schemaVersionId);
     }
 
     @Override
-    public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        schemaVersionLifeCycleManager.deleteSchemaVersion(schemaVersionId);
+    public void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
+        schemaVersionLifecycleManager.deleteSchemaVersion(schemaVersionId);
     }
 
     @Override
-    public void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        schemaVersionLifeCycleManager.archiveSchemaVersion(schemaVersionId);
+    public void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
+        schemaVersionLifecycleManager.archiveSchemaVersion(schemaVersionId);
     }
 
     @Override
-    public void disableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        schemaVersionLifeCycleManager.disableSchemaVersion(schemaVersionId);
+    public void disableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
+        schemaVersionLifecycleManager.disableSchemaVersion(schemaVersionId);
     }
 
     @Override
-    public void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        schemaVersionLifeCycleManager.startSchemaVersionReview(schemaVersionId);
+    public void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
+        schemaVersionLifecycleManager.startSchemaVersionReview(schemaVersionId);
     }
 
     @Override
-    public void executeCustomState(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifeCycleException {
-        schemaVersionLifeCycleManager.executeCustomState(schemaVersionId);
+    public void executeCustomState(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
+        schemaVersionLifecycleManager.executeCustomState(schemaVersionId);
     }
 
     @Override
     public SchemaVersionInfo getLatestSchemaVersionInfo(String schemaName) throws SchemaNotFoundException {
-        return schemaVersionLifeCycleManager.getLatestSchemaVersionInfo(schemaName);
+        return schemaVersionLifecycleManager.getLatestSchemaVersionInfo(schemaName);
     }
 
     public CompatibilityResult checkCompatibility(String schemaName, String toSchema) throws SchemaNotFoundException {
-        return schemaVersionLifeCycleManager.checkCompatibility(schemaName, toSchema);
+        return schemaVersionLifecycleManager.checkCompatibility(schemaName, toSchema);
     }
 
     @Override

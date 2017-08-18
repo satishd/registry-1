@@ -23,29 +23,29 @@ import java.util.concurrent.ConcurrentMap;
 /**
  *
  */
-public class SchemaVersionLifeCycleContext {
-    private SchemaVersionLifeCycleState state;
+public class SchemaVersionLifecycleContext {
+    private SchemaVersionLifecycleState state;
     private Long schemaVersionId;
     private Integer sequence;
     private SchemaVersionService schemaVersionService;
-    private SchemaVersionLifeCycleStates.Registry schemaLifeCycleStatesRegistry;
+    private SchemaVersionLifecycleStates.Registry schemaLifeCycleStatesRegistry;
     private ConcurrentMap<String, Object> props = new ConcurrentHashMap<>();
 
-    public SchemaVersionLifeCycleContext(Long schemaVersionId,
+    public SchemaVersionLifecycleContext(Long schemaVersionId,
                                          Integer sequence,
                                          SchemaVersionService schemaVersionService,
-                                         SchemaVersionLifeCycleStates.Registry schemaLifeCycleStatesRegistry) {
+                                         SchemaVersionLifecycleStates.Registry schemaLifeCycleStatesRegistry) {
         this.schemaVersionId = schemaVersionId;
         this.sequence = sequence;
         this.schemaVersionService = schemaVersionService;
         this.schemaLifeCycleStatesRegistry = schemaLifeCycleStatesRegistry;
     }
 
-    public void setState(SchemaVersionLifeCycleState state) {
+    public void setState(SchemaVersionLifecycleState state) {
         this.state = state;
     }
 
-    public SchemaVersionLifeCycleState getState() {
+    public SchemaVersionLifecycleState getState() {
         return state;
     }
 
@@ -61,7 +61,7 @@ public class SchemaVersionLifeCycleContext {
         return schemaVersionService;
     }
 
-    public SchemaVersionLifeCycleStates.Registry getSchemaLifeCycleStatesRegistry() {
+    public SchemaVersionLifecycleStates.Registry getSchemaLifeCycleStatesRegistry() {
         return schemaLifeCycleStatesRegistry;
     }
 
@@ -73,13 +73,13 @@ public class SchemaVersionLifeCycleContext {
         return props.put(key, value);
     }
 
-    public void updateSchemaVersionState() throws SchemaLifeCycleException, SchemaNotFoundException {
+    public void updateSchemaVersionState() throws SchemaLifecycleException, SchemaNotFoundException {
         schemaVersionService.updateSchemaVersionState(this);
     }
 
     @Override
     public String toString() {
-        return "SchemaVersionLifeCycleContext{" +
+        return "SchemaVersionLifecycleContext{" +
                 "state=" + state +
                 ", schemaVersionId=" + schemaVersionId +
                 ", sequence=" + sequence +

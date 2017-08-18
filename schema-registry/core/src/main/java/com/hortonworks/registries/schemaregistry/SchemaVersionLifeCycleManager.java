@@ -300,24 +300,25 @@ public class SchemaVersionLifeCycleManager {
         SchemaMetadataInfo schemaMetadataInfo = getSchemaMetadataInfo(schemaName);
         SchemaMetadata schemaMetadata = schemaMetadataInfo.getSchemaMetadata();
         SchemaValidationLevel validationLevel = schemaMetadata.getValidationLevel();
-        CompatibilityResult compatibilityResult;
+        CompatibilityResult compatibilityResult = null;
         switch (validationLevel) {
             case LATEST:
                 SchemaVersionInfo latestSchemaVersionInfo = getLatestEnabledSchemaVersionInfo(schemaName);
-                compatibilityResult = checkCompatibility(schemaMetadata.getType(),
-                                                         toSchema,
-                                                         latestSchemaVersionInfo.getSchemaText(),
-                                                         schemaMetadata.getCompatibility());
-                if (!compatibilityResult.isCompatible()) {
-                    LOG.info("Received schema is not compatible with the latest schema versions [{}] with schema name [{}]",
-                             latestSchemaVersionInfo.getVersion(), schemaName);
-                    return compatibilityResult;
+                if(latestSchemaVersionInfo != null) {
+                    compatibilityResult = checkCompatibility(schemaMetadata.getType(),
+                                                             toSchema,
+                                                             latestSchemaVersionInfo.getSchemaText(),
+                                                             schemaMetadata.getCompatibility());
+                    if (!compatibilityResult.isCompatible()) {
+                        LOG.info("Received schema is not compatible with the latest schema versions [{}] with schema name [{}]",
+                                 latestSchemaVersionInfo.getVersion(), schemaName);
+                    }
                 }
                 break;
             case ALL:
                 Collection<SchemaVersionInfo> schemaVersionInfos = getAllVersions(schemaName);
                 for (SchemaVersionInfo schemaVersionInfo : schemaVersionInfos) {
-                    if (SchemaVersionLifeCycleStates.ENABLED.id() == schemaVersionInfo.getStateId()) {
+                    if (SchemaVersionLifeCycleStates.ENABLED.id().equals(schemaVersionInfo.getStateId())) {
                         compatibilityResult = checkCompatibility(schemaMetadata.getType(),
                                                                  toSchema,
                                                                  schemaVersionInfo.getSchemaText(),
@@ -325,13 +326,13 @@ public class SchemaVersionLifeCycleManager {
                         if (!compatibilityResult.isCompatible()) {
                             LOG.info("Received schema is not compatible with one of the schema versions [{}] with schema name [{}]",
                                      schemaVersionInfo.getVersion(), schemaName);
-                            return compatibilityResult;
+                            break;
                         }
                     }
                 }
                 break;
         }
-        return CompatibilityResult.createCompatibleResult(toSchema);
+        return compatibilityResult != null ? compatibilityResult : CompatibilityResult.createCompatibleResult(toSchema);
     }
 
     private CompatibilityResult checkCompatibility(String type,

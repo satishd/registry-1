@@ -27,12 +27,12 @@ import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 /**
  * Schema version life cycle state flow of a specific version stored so that it can be seen how a specific version
@@ -358,36 +358,42 @@ public final class SchemaVersionLifeCycleStates {
         SchemaVersionInfo schemaVersionInfo = schemaVersionService.getSchemaVersionInfo(schemaVersionId);
         int schemaVersion = schemaVersionInfo.getVersion();
         String schemaText = schemaVersionInfo.getSchemaText();
-        Collection<SchemaVersionInfo> allSchemaVersions = schemaVersionService.getAllSchemaVersions(schemaName);
-        if (validationLevel.equals(SchemaValidationLevel.ALL)) {
-            for (SchemaVersionInfo curSchemaVersionInfo : allSchemaVersions) {
-                int curVersion = curSchemaVersionInfo.getVersion();
-                if (curVersion < schemaVersion) {
-                    checkCompatibility(schemaVersionService,
-                                       schemaMetadata,
-                                       schemaText,
-                                       curSchemaVersionInfo.getSchemaText());
-                } else {
-                    checkCompatibility(schemaVersionService,
-                                       schemaMetadata,
-                                       curSchemaVersionInfo.getSchemaText(),
-                                       schemaText);
+        List<SchemaVersionInfo> allEnabledSchemaVersions =
+                schemaVersionService.getAllSchemaVersions(schemaName)
+                                    .stream()
+                                    .filter(x -> SchemaVersionLifeCycleStates.ENABLED.id().equals(x.getStateId()))
+                                    .collect(Collectors.toList());
+
+        if(!allEnabledSchemaVersions.isEmpty()) {
+            if (validationLevel.equals(SchemaValidationLevel.ALL)) {
+                for (SchemaVersionInfo curSchemaVersionInfo : allEnabledSchemaVersions) {
+                    int curVersion = curSchemaVersionInfo.getVersion();
+                    if (curVersion < schemaVersion) {
+                        checkCompatibility(schemaVersionService,
+                                           schemaMetadata,
+                                           schemaText,
+                                           curSchemaVersionInfo.getSchemaText());
+                    } else {
+                        checkCompatibility(schemaVersionService,
+                                           schemaMetadata,
+                                           curSchemaVersionInfo.getSchemaText(),
+                                           schemaText);
+                    }
+                }
+            } else if (validationLevel.equals(SchemaValidationLevel.LATEST)) {
+                List<SchemaVersionInfo> sortedSchemaVersionInfos = new ArrayList<>(allEnabledSchemaVersions);
+                sortedSchemaVersionInfos.sort(Comparator.comparingInt(SchemaVersionInfo::getVersion));
+                int i = 0;
+                int size = sortedSchemaVersionInfos.size();
+                for (; i < size && sortedSchemaVersionInfos.get(i).getVersion() < schemaVersion; i++) {
+                    String fromSchemaText = sortedSchemaVersionInfos.get(i).getSchemaText();
+                    checkCompatibility(schemaVersionService, schemaMetadata, schemaText, fromSchemaText);
+                }
+                for (; i < size && sortedSchemaVersionInfos.get(i).getVersion() > schemaVersion; i++) {
+                    String toSchemaText = sortedSchemaVersionInfos.get(i).getSchemaText();
+                    checkCompatibility(schemaVersionService, schemaMetadata, toSchemaText, schemaText);
                 }
             }
-        } else if (validationLevel.equals(SchemaValidationLevel.LATEST)) {
-            List<SchemaVersionInfo> sortedSchemaVersionInfos = new ArrayList<>(allSchemaVersions);
-            sortedSchemaVersionInfos.sort(Comparator.comparingInt(SchemaVersionInfo::getVersion));
-            int i = 0;
-            for (; sortedSchemaVersionInfos.get(i).getVersion() < schemaVersion; i++) {
-                String fromSchemaText = sortedSchemaVersionInfos.get(i).getSchemaText();
-                checkCompatibility(schemaVersionService, schemaMetadata, schemaText, fromSchemaText);
-            }
-            int size = sortedSchemaVersionInfos.size();
-            for (; sortedSchemaVersionInfos.get(i).getVersion() > schemaVersion && i < size; i++) {
-                String toSchemaText = sortedSchemaVersionInfos.get(i).getSchemaText();
-                checkCompatibility(schemaVersionService, schemaMetadata, toSchemaText, schemaText);
-            }
-
         }
         context.setState(ENABLED);
         context.updateSchemaVersionState();

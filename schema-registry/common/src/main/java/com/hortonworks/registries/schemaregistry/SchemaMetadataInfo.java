@@ -43,7 +43,7 @@ public final class SchemaMetadataInfo implements Serializable {
     private SchemaMetadataInfo() { /* Private constructor for Jackson JSON mapping */}
 
     /**
-     * @param schemaMetadata
+     * @param schemaMetadata schema metadata
      */
     public SchemaMetadataInfo(SchemaMetadata schemaMetadata) {
         this(schemaMetadata, null, null);

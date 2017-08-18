@@ -41,7 +41,9 @@ public class SchemaLifecycleStateMachine {
             return this;
         }
 
-        public Builder withTransition(SchemaVersionLifecycleState fromState, Action action, List<SchemaVersionLifecycleState> toStates) {
+        public Builder withTransition(SchemaVersionLifecycleState fromState,
+                                      Action action,
+                                      List<SchemaVersionLifecycleState> toStates) {
             // build graph
             return this;
         }
@@ -60,8 +62,10 @@ public class SchemaLifecycleStateMachine {
 
         /**
          * Executes the given {@code schemaVersionLifecycleContext} and sets the next state using {@link SchemaVersionLifecycleContext#setState(SchemaVersionLifecycleState)}
-         * @param schemaVersionLifecycleContext
-         * @throws SchemaLifecycleException
+         *
+         * @param schemaVersionLifecycleContext current context
+         *
+         * @throws SchemaLifecycleException when any schema lifecycle error occurs.
          */
         public void execute(SchemaVersionLifecycleContext schemaVersionLifecycleContext) throws SchemaLifecycleException;
     }

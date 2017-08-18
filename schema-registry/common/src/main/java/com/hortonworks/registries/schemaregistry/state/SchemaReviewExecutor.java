@@ -27,19 +27,23 @@ public interface SchemaReviewExecutor {
 
     /**
      * Initialize with completion states of this schema review.
-     *  @param successState state to be set when review is successful.
+     *
+     * @param successState state to be set when review is successful.
      * @param retryState   state to be set when review is failed.
      * @param props        any properties to be initialized with.
      */
-    public void init(SchemaVersionLifecycleState successState,
-                     SchemaVersionLifecycleState retryState,
-                     Map<String, ?> props);
+    void init(SchemaVersionLifecycleState successState,
+              SchemaVersionLifecycleState retryState,
+              Map<String, ?> props);
 
     /**
      * Execute custom review logic for the given {@code schemaVersionLifecycleContext} and update with respective state
      * when it is is successfully executed by using {@link SchemaVersionLifecycleContext#updateSchemaVersionState()}.
      *
-     * @param schemaVersionLifecycleContext
+     * @param schemaVersionLifecycleContext SchemaVersionLifecycleContext instance
+     *
+     * @throws SchemaLifecycleException when any lifecycle error occurs.
+     * @throws SchemaNotFoundException  when the given schema version is not found.
      */
-    public void execute(SchemaVersionLifecycleContext schemaVersionLifecycleContext) throws SchemaLifecycleException, SchemaNotFoundException;
+    void execute(SchemaVersionLifecycleContext schemaVersionLifecycleContext) throws SchemaLifecycleException, SchemaNotFoundException;
 }

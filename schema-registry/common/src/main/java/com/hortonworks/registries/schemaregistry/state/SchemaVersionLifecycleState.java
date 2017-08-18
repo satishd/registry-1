@@ -23,7 +23,7 @@ import java.util.List;
 public interface SchemaVersionLifecycleState {
 
     /**
-     * @return This state's identifier. Identifiers <= 32 are reserved and 33 to 127 can be used for any custom
+     * @return This state's identifier. Identifiers &lt;= 32 are reserved and 33 to 127 can be used for any custom
      * states.
      */
     Byte id();

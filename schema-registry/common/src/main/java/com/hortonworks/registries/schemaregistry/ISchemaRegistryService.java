@@ -61,8 +61,10 @@ public interface ISchemaRegistryService {
     /**
      * Updates information about a schema.
      *
+     * @param schemaName     Schema name for which the metadata is updated.
      * @param schemaMetadata information about schema.
-     * @return tinformation about given schema identified by {@code schemaName} after update.
+     *
+     * @return information about given schema identified by {@code schemaName} after update.
      */
     SchemaMetadataInfo updateSchemaMetadata(String schemaName, SchemaMetadata schemaMetadata);
 
@@ -99,7 +101,8 @@ public interface ISchemaRegistryService {
      * @throws IncompatibleSchemaException if the given versionedSchema is incompatible according to the compatibility set.
      * @throws SchemaNotFoundException     if the given schemaMetadata not found.
      */
-    SchemaIdVersion addSchemaVersion(SchemaMetadata schemaMetadata, SchemaVersion schemaVersion) throws InvalidSchemaException, IncompatibleSchemaException, SchemaNotFoundException;
+    SchemaIdVersion addSchemaVersion(SchemaMetadata schemaMetadata,
+                                     SchemaVersion schemaVersion) throws InvalidSchemaException, IncompatibleSchemaException, SchemaNotFoundException;
 
     /**
      * Adds the given {@code schemaVersion} and returns the corresponding version number.
@@ -113,10 +116,11 @@ public interface ISchemaRegistryService {
      * @throws IncompatibleSchemaException if the given schemaVersion is incompatible according to the compatibility set.
      * @throws SchemaNotFoundException     if there is no schema metadata registered with the given {@code schemaName}
      */
-    SchemaIdVersion addSchemaVersion(String schemaName, SchemaVersion schemaVersion) throws InvalidSchemaException, IncompatibleSchemaException, SchemaNotFoundException;
+    SchemaIdVersion addSchemaVersion(String schemaName,
+                                     SchemaVersion schemaVersion) throws InvalidSchemaException, IncompatibleSchemaException, SchemaNotFoundException;
 
     /**
-     *  Deletes a schema version given {@code schemaVersionKey}, throws an SchemaNotFoundException if the schema version is absent.
+     * Deletes a schema version given {@code schemaVersionKey}, throws an SchemaNotFoundException if the schema version is absent.
      *
      * @param schemaVersionKey key identifying a schema and a version
      *
@@ -246,5 +250,7 @@ public interface ISchemaRegistryService {
         throw new UnsupportedOperationException();
     }
 
-    List<SchemaVersionLifecycleState> getSchemaVersionLifecycleStates();
+    default List<SchemaVersionLifecycleState> getSchemaVersionLifecycleStates() {
+        throw new UnsupportedOperationException();
+    }
 }

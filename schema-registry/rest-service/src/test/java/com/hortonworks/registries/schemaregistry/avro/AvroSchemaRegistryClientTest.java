@@ -46,7 +46,10 @@ import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifecycleSta
 import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifecycleStateTransition;
 import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifecycleStates;
 import org.apache.avro.util.Utf8;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,13 +58,19 @@ import org.junit.runner.RunWith;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -585,4 +594,102 @@ public class AvroSchemaRegistryClientTest {
         Assert.assertEquals(targetStateId, SCHEMA_REGISTRY_CLIENT.getSchemaVersionInfo(schemaIdVersion_2).getStateId());
     }
 
+
+    public static void main(String[] args) throws Exception {
+        Path given = Paths.get(args[0]);
+        Collection<File> files = FileUtils.listFiles(given.toFile(), new IOFileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return !file.getName().startsWith(".");
+            }
+
+            @Override
+            public boolean accept(File file, String s) {
+                return false;
+            }
+        }, new IOFileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return !file.getName().startsWith(".");
+            }
+
+            @Override
+            public boolean accept(File file, String s) {
+                return false;
+            }
+        });
+        Map<File, List<Pair<Integer, Integer>>> toBeRemovedFileLines = new HashMap<>();
+        for (File file : files) {
+            System.out.println("file = " + file);
+            List<String> lines = null;
+            try {
+                lines = Files.readAllLines(file.toPath());
+            } catch (IOException e) {
+                System.err.println("Error: " + e);
+                continue;
+            }
+            List<Pair<Integer, Integer>> pairs = new ArrayList<>();
+            Integer startNo = null, endNo = null;
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line.startsWith("<<<<<<< HEAD")) {
+                    startNo = i;
+                } else if (line.startsWith("=======")) {
+                    endNo = i;
+                    if (startNo != null) {
+                        pairs.add(Pair.of(startNo, endNo));
+                    }
+                } else if (line.startsWith(">>>>>>> apache-ref/0.11.0.1")) {
+                    pairs.add(Pair.of(i, i));
+                }
+            }
+
+            if (!pairs.isEmpty()) {
+                toBeRemovedFileLines.put(file, pairs);
+            }
+        }
+
+        System.out.println("toBeRemovedFileLines = " + toBeRemovedFileLines);
+
+        // remove lines from those files
+        for (Map.Entry<File, List<Pair<Integer, Integer>>> entry : toBeRemovedFileLines.entrySet()) {
+            final Map<Integer, Integer> linesMap = new HashMap<>();
+            for (Pair<Integer, Integer> x : entry.getValue()) {
+                System.out.println("################## x: " + x);
+                linesMap.put(x.getKey(), x.getValue());
+            }
+
+            File tmpFile = Files.createTempFile("", "").toFile();
+            tmpFile.deleteOnExit();
+
+            File srcFile = entry.getKey();
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(tmpFile));
+                 BufferedReader bufferedReader = new BufferedReader(new FileReader(srcFile))) {
+                String line;
+                boolean stopWriting = false;
+                Integer end = null;
+                int i = 0;
+                while ((line = bufferedReader.readLine()) != null) {
+
+                    if (linesMap.containsKey(i)) {
+                        stopWriting = true;
+                        end = linesMap.get(i);
+                    }
+
+                    if (!stopWriting) {
+                        bufferedWriter.write(line);
+                        bufferedWriter.newLine();
+                    }
+
+                    if (end != null && end == i) {
+                        stopWriting = false;
+                    }
+
+                    i++;
+                }
+            }
+
+            FileUtils.copyFile(tmpFile, srcFile);
+        }
+    }
 }

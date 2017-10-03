@@ -86,6 +86,10 @@ public class LocalSchemaRegistryServer {
         return registryApplication.getAdminPort();
     }
 
+    public String getLocalURL() {
+        return registryApplication.localServer.getURI().toString();
+    }
+
     /**
      * Returns true if this server is the leader in registry cluster.
      */
@@ -97,7 +101,7 @@ public class LocalSchemaRegistryServer {
         private static final Logger LOG = LoggerFactory.getLogger(LocalRegistryApplication.class);
 
         private final String configFilePath;
-        private Server localServer;
+        private volatile Server localServer;
 
         public LocalRegistryApplication(String configFilePath) {
             this.configFilePath = configFilePath;
@@ -129,6 +133,7 @@ public class LocalSchemaRegistryServer {
             if (localServer != null) {
                 localServer.stop();
                 leadershipParticipantRef.get().close();
+                localServer = null;
                 LOG.info("Local schema registry instance is stopped.");
             } else {
                 LOG.info("No local schema registry instance is running to be stopped.");

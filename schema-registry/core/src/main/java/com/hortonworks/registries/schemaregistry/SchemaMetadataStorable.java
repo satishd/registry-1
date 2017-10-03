@@ -127,6 +127,7 @@ public class SchemaMetadataStorable extends AbstractStorable {
     public Map<String, Object> toMap() {
         Map<String, Object> values = super.toMap();
         values.put(COMPATIBILITY, compatibility.name());
+        values.put(VALIDATION_LEVEL, validationLevel.name());
         return values;
     }
 
@@ -134,7 +135,12 @@ public class SchemaMetadataStorable extends AbstractStorable {
     public Storable fromMap(Map<String, Object> map) {
         String compatibilityName = (String) map.remove(COMPATIBILITY);
         compatibility = SchemaCompatibility.valueOf(compatibilityName);
+
+        String validationLevelName = (String) map.remove(VALIDATION_LEVEL);
+        validationLevel = SchemaValidationLevel.valueOf(validationLevelName);
+
         super.fromMap(map);
+
         return this;
     }
 

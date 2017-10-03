@@ -63,20 +63,11 @@ public interface ISchemaRegistry extends ISchemaRegistryService {
     SchemaVersionInfo getSchemaVersionInfo(String schemaName, String schemaText) throws SchemaNotFoundException, InvalidSchemaException;
 
     /**
-     * @param id schema version id
-     *
-     * @return Returns {@link SchemaVersionInfo} for the given id.
-     *
-     * @throws SchemaNotFoundException when there is no version of schema with the given id.
-     */
-    SchemaVersionInfo getSchemaVersionInfo(Long id) throws SchemaNotFoundException;
-
-    /**
      * @param props properties
      *
      * @return Collects aggregated schema metadata which contains the given properties.
      */
-    Collection<AggregatedSchemaMetadataInfo> findAggregatedSchemaMetadata(Map<String, String> props);
+    Collection<AggregatedSchemaMetadataInfo> findAggregatedSchemaMetadata(Map<String, String> props) throws SchemaNotFoundException;
 
     /**
      * @param schemaName name of the schema
@@ -84,7 +75,7 @@ public interface ISchemaRegistry extends ISchemaRegistryService {
      * @return {@link AggregatedSchemaMetadataInfo} for the given schema name, null if there is no schema registered with
      * the given schema name.
      */
-    AggregatedSchemaMetadataInfo getAggregatedSchemaMetadataInfo(String schemaName);
+    AggregatedSchemaMetadataInfo getAggregatedSchemaMetadataInfo(String schemaName) throws SchemaNotFoundException;
 
     /**
      * @param props properties

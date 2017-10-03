@@ -14,7 +14,7 @@
 
 require('file?name=[name].[ext]!../../index.html'); //for production build
 
-import React, {Component, PropTypes} from 'react';
+import React, {Component} from 'react';
 import {render} from 'react-dom';
 import debug from 'debug';
 import 'babel-polyfill';
@@ -29,6 +29,7 @@ import 'react-bootstrap-switch/dist/css/bootstrap3/react-bootstrap-switch.min.cs
 import '../styles/css/toastr.min.css';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/addon/lint/lint.css';
+import './libs/jsdifflib/diffview.css';
 import '../styles/css/style.css';
 
 render(

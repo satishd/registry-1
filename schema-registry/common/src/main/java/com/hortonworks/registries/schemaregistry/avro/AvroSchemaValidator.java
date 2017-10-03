@@ -19,7 +19,6 @@ import com.hortonworks.registries.schemaregistry.SchemaCompatibility;
 import com.hortonworks.registries.schemaregistry.SchemaValidator;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.SchemaValidatorBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +38,7 @@ import java.util.TreeSet;
  * schema can be successfully decoded using the specified reader schema.
  */
 public final class AvroSchemaValidator implements SchemaValidator<Schema> {
-    private static final Logger LOG = LoggerFactory.getLogger(SchemaCompatibility.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AvroSchemaValidator.class);
 
     private static final Map<SchemaCompatibility, SchemaCompatibilityValidator> COMPATIBILITY_VALIDATORS;
 
@@ -68,10 +67,10 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
         SchemaPairCompatibility schemaPairCompatibility = checkReaderWriterCompatibility(readerSchema, writerSchema);
         SchemaCompatibilityResult result = schemaPairCompatibility.getResult();
         return result.getCompatibility() == SchemaCompatibilityType.COMPATIBLE
-                ? CompatibilityResult.createCompatibleResult(writerSchema.toString())
-                : CompatibilityResult.createIncompatibleResult(result.getMessage(),
-                                                               result.getLocation(),
-                                                               writerSchema.toString());
+               ? CompatibilityResult.createCompatibleResult(writerSchema.toString())
+               : CompatibilityResult.createIncompatibleResult(result.getMessage(),
+                                                              result.getLocation(),
+                                                              writerSchema.toString());
     }
 
 // -----------------------------------------------------------------------------------------------
@@ -91,6 +90,7 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
      *
      * @param reader schema to check.
      * @param writer schema to check.
+     *
      * @return a result object identifying any compatibility errors.
      */
     public static SchemaPairCompatibility checkReaderWriterCompatibility(final Schema reader,
@@ -131,6 +131,7 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
      *
      * @param reader Named reader schema.
      * @param writer Named writer schema.
+     *
      * @return whether the names of the named schemas match or not.
      */
     public static boolean schemaNameEquals(final Schema reader, final Schema writer) {
@@ -155,6 +156,7 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
      *                     field.
      * @param readerField  Reader field to identify the corresponding writer field
      *                     of.
+     *
      * @return the writer field, if any does correspond, or None.
      */
     public static Schema.Field lookupWriterField(final Schema writerSchema, final Schema.Field readerField) {
@@ -271,6 +273,7 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
          *
          * @param reader Reader schema to test.
          * @param writer Writer schema to test.
+         *
          * @return the compatibility of the reader/writer schema pair.
          */
         public SchemaCompatibilityResult getCompatibility(final Schema reader,
@@ -289,6 +292,7 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
          * @param reader         Reader schema to test.
          * @param writer         Writer schema to test.
          * @param location       Stack with which to track the location within the schema.
+         *
          * @return the compatibility of the reader/writer schema pair.
          */
         private SchemaCompatibilityResult getCompatibility(String referenceToken,
@@ -327,6 +331,7 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
          *
          * @param reader Reader schema to test.
          * @param writer Writer schema to test.
+         *
          * @return the compatibility of the reader/writer schema pair.
          */
         private SchemaCompatibilityResult calculateCompatibility(final Schema reader,
@@ -426,32 +431,32 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
                         return typeMismatch(reader, writer, location);
                     case LONG: {
                         return (writer.getType() == Schema.Type.INT)
-                                ? SchemaCompatibilityResult.compatible()
-                                : typeMismatch(reader, writer, location);
+                               ? SchemaCompatibilityResult.compatible()
+                               : typeMismatch(reader, writer, location);
                     }
                     case FLOAT: {
                         return ((writer.getType() == Schema.Type.INT)
                                 || (writer.getType() == Schema.Type.LONG))
-                                ? SchemaCompatibilityResult.compatible()
-                                : typeMismatch(reader, writer, location);
+                               ? SchemaCompatibilityResult.compatible()
+                               : typeMismatch(reader, writer, location);
 
                     }
                     case DOUBLE: {
                         return ((writer.getType() == Schema.Type.INT)
                                 || (writer.getType() == Schema.Type.LONG)
                                 || (writer.getType() == Schema.Type.FLOAT))
-                                ? SchemaCompatibilityResult.compatible()
-                                : typeMismatch(reader, writer, location);
+                               ? SchemaCompatibilityResult.compatible()
+                               : typeMismatch(reader, writer, location);
                     }
                     case BYTES: {
                         return (writer.getType() == Schema.Type.STRING)
-                                ? SchemaCompatibilityResult.compatible()
-                                : typeMismatch(reader, writer, location);
+                               ? SchemaCompatibilityResult.compatible()
+                               : typeMismatch(reader, writer, location);
                     }
                     case STRING: {
                         return (writer.getType() == Schema.Type.BYTES)
-                                ? SchemaCompatibilityResult.compatible()
-                                : typeMismatch(reader, writer, location);
+                               ? SchemaCompatibilityResult.compatible()
+                               : typeMismatch(reader, writer, location);
                     }
 
                     case ARRAY:
@@ -500,9 +505,10 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
                     // Reader field does not correspond to any field in the writer
                     // record schema, so the reader field must have a default value.
                     if (readerField.defaultValue() == null) {
-                        if(!isUnionWithFirstTypeAsNull(readerFieldSchema)) {
+                        if (!isUnionWithFirstTypeAsNull(readerFieldSchema)) {
                             // reader field has no default value
-                            String message = String.format("Reader schema missing default value for field: %s", readerField.name());
+                            String message = String.format("Reader schema missing default value for field: %s", readerField
+                                    .name());
                             return SchemaCompatibilityResult.incompatible(
                                     SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, reader, writer,
                                     message, location);
@@ -653,13 +659,19 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
          * @return a SchemaCompatibilityResult object with RECURSION_IN_PROGRESS
          * SchemaCompatibilityType, and no other state.
          */
-        public static SchemaCompatibilityResult recursionInProgress() {
+        private static SchemaCompatibilityResult recursionInProgress() {
             return RECURSION_IN_PROGRESS;
         }
 
         /**
          * Returns a details object representing an incompatible schema pair,
          * including error details.
+         *
+         * @param error type of error
+         * @param reader reader schema
+         * @param writer writer schema
+         * @param message message
+         * @param location location of error
          *
          * @return a SchemaCompatibilityResult object with INCOMPATIBLE
          * SchemaCompatibilityType, and state representing the violating
@@ -720,6 +732,7 @@ public final class AvroSchemaValidator implements SchemaValidator<Schema> {
          * SchemaIncompatibilityType.
          *
          * @return a String with details about the incompatibility, or null
+         *
          * @see #getIncompatibility()
          */
         public String getMessage() {

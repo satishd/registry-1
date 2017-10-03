@@ -19,6 +19,8 @@ import com.hortonworks.registries.schemaregistry.errors.IncompatibleSchemaExcept
 import com.hortonworks.registries.schemaregistry.errors.InvalidSchemaException;
 import com.hortonworks.registries.schemaregistry.errors.SchemaNotFoundException;
 import com.hortonworks.registries.schemaregistry.serde.SerDesException;
+import com.hortonworks.registries.schemaregistry.state.SchemaLifecycleException;
+import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifecycleStateMachineInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,8 +60,10 @@ public interface ISchemaRegistryService {
     /**
      * Updates information about a schema.
      *
+     * @param schemaName     Schema name for which the metadata is updated.
      * @param schemaMetadata information about schema.
-     * @return tinformation about given schema identified by {@code schemaName} after update.
+     *
+     * @return information about given schema identified by {@code schemaName} after update.
      */
     SchemaMetadataInfo updateSchemaMetadata(String schemaName, SchemaMetadata schemaMetadata);
 
@@ -96,7 +100,8 @@ public interface ISchemaRegistryService {
      * @throws IncompatibleSchemaException if the given versionedSchema is incompatible according to the compatibility set.
      * @throws SchemaNotFoundException     if the given schemaMetadata not found.
      */
-    SchemaIdVersion addSchemaVersion(SchemaMetadata schemaMetadata, SchemaVersion schemaVersion) throws InvalidSchemaException, IncompatibleSchemaException, SchemaNotFoundException;
+    SchemaIdVersion addSchemaVersion(SchemaMetadata schemaMetadata,
+                                     SchemaVersion schemaVersion) throws InvalidSchemaException, IncompatibleSchemaException, SchemaNotFoundException;
 
     /**
      * Adds the given {@code schemaVersion} and returns the corresponding version number.
@@ -110,7 +115,17 @@ public interface ISchemaRegistryService {
      * @throws IncompatibleSchemaException if the given schemaVersion is incompatible according to the compatibility set.
      * @throws SchemaNotFoundException     if there is no schema metadata registered with the given {@code schemaName}
      */
-    SchemaIdVersion addSchemaVersion(String schemaName, SchemaVersion schemaVersion) throws InvalidSchemaException, IncompatibleSchemaException, SchemaNotFoundException;
+    SchemaIdVersion addSchemaVersion(String schemaName,
+                                     SchemaVersion schemaVersion) throws InvalidSchemaException, IncompatibleSchemaException, SchemaNotFoundException;
+
+    /**
+     * Deletes a schema version given {@code schemaVersionKey}, throws an SchemaNotFoundException if the schema version is absent.
+     *
+     * @param schemaVersionKey key identifying a schema and a version
+     *
+     * @throws SchemaNotFoundException when there is no schema version exists with the given {@code schemaVersionKey}
+     */
+    void deleteSchemaVersion(SchemaVersionKey schemaVersionKey) throws SchemaNotFoundException;
 
     /**
      * @param schemaVersionKey key identifying a schema and a version
@@ -210,4 +225,27 @@ public interface ISchemaRegistryService {
      */
     Collection<SerDesInfo> getSerDes(String schemaName);
 
+    default void enableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException, IncompatibleSchemaException {
+        throw new UnsupportedOperationException();
+    }
+
+    default void deleteSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
+        throw new UnsupportedOperationException();
+    }
+
+    default void archiveSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
+        throw new UnsupportedOperationException();
+    }
+
+    default void disableSchemaVersion(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
+        throw new UnsupportedOperationException();
+    }
+
+    default void startSchemaVersionReview(Long schemaVersionId) throws SchemaNotFoundException, SchemaLifecycleException {
+        throw new UnsupportedOperationException();
+    }
+
+    void transitionState(Long schemaVersionId, Byte targetStateId) throws SchemaNotFoundException, SchemaLifecycleException;
+
+    SchemaVersionLifecycleStateMachineInfo getSchemaVersionLifecycleStateMachineInfo();
 }

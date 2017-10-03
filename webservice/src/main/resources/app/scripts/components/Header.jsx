@@ -13,6 +13,7 @@
 **/
 
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import {Link} from 'react-router';
 import {Nav, Navbar, NavItem, NavDropdown, MenuItem} from 'react-bootstrap';
 import {streamlinePort} from '../utils/Constants';
@@ -42,7 +43,7 @@ export default class Header extends Component {
         <Navbar.Header>
           <Navbar.Brand>
             <a href="javascript:void(0);">
-              <img src="/styles/img/logo.png" className="logo-image"/>
+              <img src="../ui/styles/img/logo.png" className="logo-image"/>
               <div className="logo-text"><strong>SCHEMA</strong>REGISTRY</div>
             </a>
           </Navbar.Brand>
@@ -59,7 +60,6 @@ export default class Header extends Component {
     );
   }
 }
-
 Header.contextTypes = {
-  router: React.PropTypes.object.isRequired
+  router: PropTypes.object.isRequired
 };

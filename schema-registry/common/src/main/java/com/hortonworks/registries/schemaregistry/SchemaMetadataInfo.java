@@ -15,6 +15,7 @@
  **/
 package com.hortonworks.registries.schemaregistry;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
@@ -24,7 +25,10 @@ import java.io.Serializable;
  * There can be only one instance with the same name.
  * New versions of the schema can be registered for the given {@link SchemaMetadataInfo} by giving {@link SchemaVersion} instances.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class SchemaMetadataInfo implements Serializable {
+
+    private static final long serialVersionUID = 8083699103887496439L;
 
     /**
      * metadata about the schema
@@ -39,13 +43,13 @@ public final class SchemaMetadataInfo implements Serializable {
     private SchemaMetadataInfo() { /* Private constructor for Jackson JSON mapping */}
 
     /**
-     * @param schemaMetadata
+     * @param schemaMetadata schema metadata
      */
     public SchemaMetadataInfo(SchemaMetadata schemaMetadata) {
         this(schemaMetadata, null, null);
     }
 
-    SchemaMetadataInfo(SchemaMetadata schemaMetadata,
+    public SchemaMetadataInfo(SchemaMetadata schemaMetadata,
                        Long id,
                        Long timestamp) {
         Preconditions.checkNotNull(schemaMetadata, "schemaMetadata can not be null");

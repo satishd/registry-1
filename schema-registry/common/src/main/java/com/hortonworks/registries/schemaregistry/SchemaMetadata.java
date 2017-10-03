@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Hortonworks.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
  **/
 package com.hortonworks.registries.schemaregistry;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
@@ -24,9 +25,11 @@ import java.io.Serializable;
 /**
  * This class is about metadata of a schema which includes name, type, schemaGroup, description, compatibility and evolve.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SchemaMetadata implements Serializable {
 
     private static final long serialVersionUID = -6880986623123299254L;
+
     /**
      * Type of a schema, which can be AVRO, JSON, PROTOBUF etc
      */
@@ -87,8 +90,8 @@ public class SchemaMetadata implements Serializable {
         this.schemaGroup = schemaGroup;
         this.description = description;
         this.evolve = evolve;
-        this.compatibility = (compatibility != null) ? compatibility : SchemaCompatibility.DEFAULT_COMPATIBILITY;
-        this.validationLevel = (validationLevel != null) ? validationLevel : SchemaValidationLevel.DEFAULT_VALIDATION_LEVEL;
+        this.compatibility = compatibility;
+        this.validationLevel = validationLevel;
     }
 
     /**
@@ -123,14 +126,14 @@ public class SchemaMetadata implements Serializable {
      * @return compatibility supported by this schema
      */
     public SchemaCompatibility getCompatibility() {
-        return compatibility;
+        return compatibility != null ? compatibility : SchemaCompatibility.DEFAULT_COMPATIBILITY;
     }
 
     /**
      * @return validation supported by this schema
      */
     public SchemaValidationLevel getValidationLevel() {
-        return validationLevel;
+        return validationLevel != null ? validationLevel : SchemaValidationLevel.DEFAULT_VALIDATION_LEVEL;
     }
 
     public boolean isEvolve() {
@@ -162,8 +165,9 @@ public class SchemaMetadata implements Serializable {
         if (schemaGroup != null ? !schemaGroup.equals(that.schemaGroup) : that.schemaGroup != null) return false;
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
         if (description != null ? !description.equals(that.description) : that.description != null) return false;
-        if (validationLevel != null ? !validationLevel.equals(that.validationLevel) : that.validationLevel != null) return false;
-        return compatibility == that.compatibility;
+        if (getValidationLevel() != null ? !getValidationLevel().equals(that.getValidationLevel())
+                                         : that.getValidationLevel() != null) return false;
+        return getCompatibility() == that.getCompatibility();
     }
 
     @Override
@@ -172,8 +176,8 @@ public class SchemaMetadata implements Serializable {
         result = 31 * result + (schemaGroup != null ? schemaGroup.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + (compatibility != null ? compatibility.hashCode() : 0);
-        result = 31 * result + (validationLevel != null ? validationLevel.hashCode() : 0);
+        result = 31 * result + (getCompatibility() != null ? getCompatibility().hashCode() : 0);
+        result = 31 * result + (getValidationLevel() != null ? getValidationLevel().hashCode() : 0);
         result = 31 * result + (evolve ? 1 : 0);
         return result;
     }
@@ -210,12 +214,14 @@ public class SchemaMetadata implements Serializable {
             description = schemaMetadata.getDescription();
             compatibility = schemaMetadata.getCompatibility();
             validationLevel = schemaMetadata.getValidationLevel();
-            evolve = schemaMetadata.evolve;
+            evolve = schemaMetadata.isEvolve();
         }
 
         /**
          * @param schemaGroup schema group to which this schema belongs to. For ex: kafka, hive etc
          *                    This can be used in querying schemas belonging to a specific schema group.
+         *
+         * @return the current instance.
          */
         public Builder schemaGroup(String schemaGroup) {
             this.schemaGroup = schemaGroup;
@@ -224,6 +230,8 @@ public class SchemaMetadata implements Serializable {
 
         /**
          * @param type Type of a schema, which can be AVRO, JSON, PROTOBUF etc
+         *
+         * @return the current instance.
          */
         public Builder type(String type) {
             Preconditions.checkNotNull(type, "type can not be null");
@@ -233,6 +241,8 @@ public class SchemaMetadata implements Serializable {
 
         /**
          * @param description Description about the schema metadata.
+         *
+         * @return the current instance.
          */
         public Builder description(String description) {
             this.description = description;
@@ -241,6 +251,8 @@ public class SchemaMetadata implements Serializable {
 
         /**
          * @param compatibility Compatibility to be supported for all versions of this evolving schema.
+         *
+         * @return the current instance.
          */
         public Builder compatibility(SchemaCompatibility compatibility) {
             this.compatibility = compatibility;
@@ -249,6 +261,8 @@ public class SchemaMetadata implements Serializable {
 
         /**
          * @param validationLevel Validation level to be supported for versions of this evolving schema, all or latest.
+         *
+         * @return the current instance.
          */
         public Builder validationLevel(SchemaValidationLevel validationLevel) {
             this.validationLevel = validationLevel;
@@ -258,12 +272,17 @@ public class SchemaMetadata implements Serializable {
         /**
          * @param evolve whether to support multiple version of a schema. If it is set to false then only one version
          *               of the schema can be added.
+         *
+         * @return the current instance.
          */
         public Builder evolve(boolean evolve) {
             this.evolve = evolve;
             return this;
         }
 
+        /**
+         * @return SchemaMetadata instance built from the
+         */
         public SchemaMetadata build() {
             return new SchemaMetadata(name, type, schemaGroup, description, compatibility, validationLevel, evolve);
         }

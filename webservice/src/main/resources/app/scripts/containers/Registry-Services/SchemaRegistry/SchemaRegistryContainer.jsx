@@ -28,9 +28,11 @@ import {
     PanelGroup,
     Panel,
     Modal,
-    Pagination
+    Pagination,
+    OverlayTrigger,
+    Popover
 } from 'react-bootstrap';
-import Utils from '../../../utils/Utils';
+import Utils, {StateMachine} from '../../../utils/Utils';
 import ReactCodemirror from 'react-codemirror';
 import '../../../utils/Overrides';
 import CodeMirror from 'codemirror';
@@ -39,6 +41,7 @@ import jsonlint from 'jsonlint';
 import lint from 'codemirror/addon/lint/lint';
 import SchemaInfoForm from './SchemaInfoForm';
 import SchemaVersionForm from './SchemaVersionForm';
+import SchemaVersionDiff from './SchemaVersionDiff';
 import FSReactToastr from '../../../components/FSReactToastr';
 import SchemaREST from '../../../rest/SchemaREST';
 import NoData from '../../../components/NoData';
@@ -61,6 +64,60 @@ CodeMirror.registerHelper("lint", "json", function(text) {
   } catch (e) {}
   return found;
 });
+
+class ChangeState extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      edit: false
+    };
+  }
+  changeState(e){
+    const {version} = this.props;
+    SchemaREST.changeStateOfVersion(version.id, this.refs.stateSelect.value, {}).then((res) => {
+      version.stateId = parseInt(this.refs.stateSelect.value);
+      this.setState({edit: false});
+    });
+  }
+  onEdit(){
+    this.setState({edit: true}, () => {});
+  }
+  render(){
+    const {edit} = this.state;
+    const {StateMachine, version, showEditBtn} = this.props;
+    const transitions = StateMachine.getTransitionStateOptions(version.stateId);
+    const currentState = StateMachine.getStateById(version.stateId).name;
+    let comp;
+    if(edit){
+      comp = <div style={{"marginTop": "5px"}}>
+        <select ref="stateSelect" className="stateSelect" defaultValue={version.stateId}>
+          <option disabled value={version.stateId}>{currentState}</option>
+          {transitions.map( option =>
+            (<option value={option.targetStateId} key={option.targetStateId}>{option.name}</option>)
+          )}
+        </select>
+        &nbsp;
+        <a href="javascript:void(0)" className="btn-stateSelect" onClick={this.changeState.bind(this)}>
+          <i className="fa fa-check" aria-hidden="true"></i>
+        </a>
+        &nbsp;
+        <a href="javascript:void(0)" className="btn-stateSelect" onClick={() => this.setState({edit: false})}>
+          <i className="fa fa-times" aria-hidden="true"></i>
+        </a>
+      </div>;
+    }else{
+      comp = <div>
+          <span className="text-muted">{currentState}</span>
+          &nbsp;
+          {transitions.length &&  showEditBtn?
+          <a href="javascript:void(0)" onClick={this.onEdit.bind(this)}><i className="fa fa-pencil" aria-hidden="true"></i></a>
+          : ''
+          }
+        </div>;
+    }
+    return comp;
+  }
+}
 
 export default class SchemaRegistryContainer extends Component {
   constructor(props) {
@@ -93,6 +150,8 @@ export default class SchemaRegistryContainer extends Component {
     };
     this.schemaObj = {};
     this.schemaText = '';
+
+    this.StateMachine = new StateMachine();
   }
   componentDidUpdate(){
     this.btnClassChange();
@@ -104,6 +163,7 @@ export default class SchemaRegistryContainer extends Component {
         this.setState({dataFound: false});
       }
     });
+    this.fetchStateMachine();
   }
   btnClassChange = () => {
     if(!this.state.loading){
@@ -118,6 +178,11 @@ export default class SchemaRegistryContainer extends Component {
         }
       }
     }
+  }
+  fetchStateMachine(){
+    return SchemaREST.getSchemaVersionStateMachine().then((res) => {
+      this.StateMachine.setStates(res);
+    });
   }
   fetchData() {
     let promiseArr = [],
@@ -148,7 +213,9 @@ export default class SchemaRegistryContainer extends Component {
                 description: v.description,
                 schemaText: v.schemaText,
                 schemaName: name,
-                timestamp: v.timestamp
+                timestamp: v.timestamp,
+                stateId: v.stateId,
+                id: v.id
               });
             });
             currentVersion = Utils.sortArray(obj.versions.slice(), 'timestamp', false)[0].version;
@@ -217,7 +284,7 @@ export default class SchemaRegistryContainer extends Component {
   }
   onFilterChange = (e) => {
     this.setState({filterValue: e.target.value});
-  } 
+  }
   onFilterKeyPress = (e) => {
     if(e.key=='Enter'){
       this.setState({filterValue: e.target.value.trim(), activePage: 1}, () => {
@@ -238,7 +305,7 @@ export default class SchemaRegistryContainer extends Component {
     el.target.parentElement.setAttribute("class","active");
     //if sorting by name, then in ascending order
     //if sorting by timestamp, then in descending order
-    
+
     const sortObj = {key : eventKey , text : this.sortByKey(eventKey)};
     this.setState({sorted : sortObj}, () => {
       this.fetchData();
@@ -370,6 +437,14 @@ export default class SchemaRegistryContainer extends Component {
     return allData.slice(startIndex, startIndex+pageSize);
   }
 
+  handleCompareVersions(schemaObj) {
+    this.schemaObj = schemaObj;
+    this.setState({
+      modalTitle: 'Compare Schema Versions',
+      showDiffModal: true
+    });
+  }
+
   render() {
     const jsonoptions = {
       lineNumbers: true,
@@ -403,7 +478,6 @@ export default class SchemaRegistryContainer extends Component {
       var versionObj = _.find(s.versionsArr, {versionId: s.currentVersion});
       var totalVersions = s.versionsArr.length;
       var sortedVersions =  Utils.sortArray(s.versionsArr.slice(), 'versionId', false);
-      var versionIndex = _.findIndex(sortedVersions, {versionId: s.currentVersion});
       var header = (
         <div>
         <span className={`hb ${btnClass} schema-status-icon`}><i className={iconClass}></i></span>
@@ -457,7 +531,7 @@ export default class SchemaRegistryContainer extends Component {
                         </div>
                         <div className="col-sm-6">
                             {s.renderCodemirror ?
-                            (s.evolve ? ([<h6 key="e.1" className="version-number-text">VERSION&nbsp;{totalVersions - versionIndex}</h6>,
+                            (s.evolve ? ([<h6 key="e.1" className="version-number-text">VERSION&nbsp;{versionObj.versionId}</h6>,
                               <button key="e.2" type="button" className="btn btn-link btn-edit-schema" onClick={this.handleAddVersion.bind(this, s)}>
                                 <i className="fa fa-pencil"></i>
                               </button>,
@@ -472,7 +546,7 @@ export default class SchemaRegistryContainer extends Component {
                                 />)
                             : (<div className="col-sm-12">
                                     <div className="loading-img text-center" style={{marginTop : "50px"}}>
-                                        <img src="styles/img/start-loader.gif" alt="loading" />
+                                        <img src="../ui/styles/img/start-loader.gif" alt="loading" />
                                     </div>
                               </div>)
                             }
@@ -484,13 +558,24 @@ export default class SchemaRegistryContainer extends Component {
                         sortedVersions.map((v, i)=>{
                           return (
                               <li onClick={this.selectVersion.bind(this, v)} className={s.currentVersion === v.versionId? "clearfix current" : "clearfix"} key={i}>
-                              <a className={s.currentVersion === v.versionId? "hb version-number" : "hb default version-number"}>v{totalVersions - i}</a>
-                              <p><span className="log-time-text">{Utils.splitTimeStamp(new Date(v.timestamp))}</span> <br/><span className="text-muted">{i === (totalVersions - 1) ? 'CREATED': 'EDITED'}</span></p>
+                                <a className={s.currentVersion === v.versionId? "hb version-number" : "hb default version-number"}>v{v.versionId}</a>
+                                <p>
+                                  <span className="log-time-text">{Utils.splitTimeStamp(new Date(v.timestamp))}</span>
+                                  <br/>
+                                </p>
+                                <ChangeState
+                                  version={v}
+                                  StateMachine={this.StateMachine}
+                                  showEditBtn={s.currentVersion === v.versionId}
+                                />
                               </li>
                           );
                         })
                       }
                     </ul>
+                    {sortedVersions.length > 1 ?
+                      <a className="compare-version" onClick={this.handleCompareVersions.bind(this, s)}>COMPARE VERSIONS</a> : ''
+                    }
                 </div>
             </div>
     </div>) :
@@ -516,7 +601,7 @@ export default class SchemaRegistryContainer extends Component {
                 />)
                 : (<div className="col-sm-12">
                     <div className="loading-img text-center" style={{marginTop : "50px"}}>
-                      <img src="styles/img/start-loader.gif" alt="loading" />
+                      <img src="../ui/styles/img/start-loader.gif" alt="loading" />
                     </div>
                 </div>)
               }
@@ -532,7 +617,7 @@ export default class SchemaRegistryContainer extends Component {
 </Panel>
       );
     });
-        
+
 
     return (
       <BaseContainer routes={this.props.routes} onLandingPage="false" breadcrumbData={this.breadcrumbData} headerContent={'All Schemas'}>
@@ -541,7 +626,7 @@ export default class SchemaRegistryContainer extends Component {
                   <i className="fa fa-plus"></i>
               </button>
           </div>
-          {!this.state.loading && this.state.dataFound ? 
+          {!this.state.loading && this.state.dataFound ?
             <div className="wrapper animated fadeIn">
               <div className="page-title-box row no-margin">
                   <div className="col-md-3 col-md-offset-6 text-right">
@@ -559,17 +644,17 @@ export default class SchemaRegistryContainer extends Component {
                       id="sortDropdown"
                       className="sortDropdown"
                     >
-                        <MenuItem onClick={this.onSortByClicked.bind(this,"name")}>
+                        <MenuItem active={this.state.sorted.key == 'name' ? true : false} onClick={this.onSortByClicked.bind(this,"name")}>
                             &nbsp;Name
                         </MenuItem>
-                        <MenuItem active onClick={this.onSortByClicked.bind(this,"timestamp")}>
+                        <MenuItem active={this.state.sorted.key == 'timestamp' ? true : false} onClick={this.onSortByClicked.bind(this,"timestamp")}>
                             &nbsp;Last Update
                         </MenuItem>
                     </DropdownButton>
                   </div>
               </div>
-            
-              {!this.state.loading && schemaEntities.length ? 
+
+              {!this.state.loading && schemaEntities.length ?
                 <div className="row">
                     <div className="col-md-12">
                       <PanelGroup
@@ -601,14 +686,14 @@ export default class SchemaRegistryContainer extends Component {
             </div>
             : !this.state.loading ? <NoData /> : null}
 
-          {this.state.loading ? 
+          {this.state.loading ?
             <div className="col-sm-12">
               <div className="loading-img text-center" style={{marginTop : "50px"}}>
-                <img src="styles/img/start-loader.gif" alt="loading" />
+                <img src="../ui/styles/img/start-loader.gif" alt="loading" />
               </div>
             </div>
             : null}
-  
+
         <FSModal ref="schemaModal" bsSize="large" data-title={this.state.modalTitle} data-resolve={this.handleSave.bind(this)}>
           <SchemaInfoForm ref="addSchema"/>
         </FSModal>
@@ -629,6 +714,17 @@ export default class SchemaRegistryContainer extends Component {
           </Modal.Body>
           <Modal.Footer>
             <Button onClick={()=>{this.setState({ expandSchema: false });}}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+        <Modal ref="schemaDiffModal" bsSize="large" show={this.state.showDiffModal} onHide={()=>{this.setState({ showDiffModal: false });}}>
+          <Modal.Header closeButton>
+            <Modal.Title>{this.state.modalTitle}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <SchemaVersionDiff ref="compareVersion" schemaObj={this.schemaObj}/>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={()=>{this.setState({ showDiffModal: false });}}>Close</Button>
           </Modal.Footer>
         </Modal>
       </BaseContainer>

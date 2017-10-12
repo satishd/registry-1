@@ -6,7 +6,7 @@ Follow [@schemaregistry](https://twitter.com/schemaregistry) on Twitter for upda
 
 ## Documentation
 Documentation and tutorials can be found on the [Registry docs](http://registry-project.readthedocs.io/en/latest/)
-
+ 
 
 ## Getting Help
 

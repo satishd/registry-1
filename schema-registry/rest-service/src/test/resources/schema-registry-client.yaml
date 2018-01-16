@@ -1,4 +1,4 @@
-schema.registry.url : "__registry_url"
+schema.registry.url : "http://localhost:9090/api/v1/"
 schema.registry.client.local.jars.path : "/tmp/schema-registry/local-jars"
 schema.registry.client.class.loader.cache.size : 1024
 schema.registry.client.class.loader.cache.expiry.interval : 3600

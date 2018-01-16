@@ -87,7 +87,7 @@ public class LocalSchemaRegistryServer {
     }
 
     public String getLocalURL() {
-        return registryApplication.localServer.getURI().toString();
+        return registryApplication.localServer != null ? registryApplication.localServer.getURI().toString() : null;
     }
 
     /**
@@ -141,11 +141,11 @@ public class LocalSchemaRegistryServer {
         }
 
         int getLocalPort() {
-            return ((ServerConnector) localServer.getConnectors()[0]).getLocalPort();
+            return localServer.getConnectors().length > 0 ? ((ServerConnector) localServer.getConnectors()[0]).getLocalPort() : 0;
         }
 
         int getAdminPort() {
-            return ((ServerConnector) localServer.getConnectors()[1]).getLocalPort();
+            return localServer.getConnectors().length > 1 ? ((ServerConnector) localServer.getConnectors()[1]).getLocalPort() : 0;
         }
 
         boolean hasLeadership() {

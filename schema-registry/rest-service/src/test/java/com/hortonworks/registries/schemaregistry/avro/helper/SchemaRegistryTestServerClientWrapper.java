@@ -110,7 +110,7 @@ public class SchemaRegistryTestServerClientWrapper {
     }
 
     private Map<String, Object> createClientConf() {
-        String registryURL = localSchemaRegistryServer.getLocalURL() + V1_API_PATH;
+        String registryURL = localSchemaRegistryServer.getLocalURL() != null ? localSchemaRegistryServer.getLocalURL() + V1_API_PATH : null;
         if (schemaRegistryTestConfiguration.getClientYAMLPath() == null) {
             Map<String, Object> ret = new HashMap<>();
             ret.put(SchemaRegistryClient.Configuration.SCHEMA_REGISTRY_URL.name(), registryURL);
@@ -118,7 +118,9 @@ public class SchemaRegistryTestServerClientWrapper {
         }
         try (FileInputStream fis = new FileInputStream(schemaRegistryTestConfiguration.getClientYAMLPath())) {
             Map<String, Object> ret = (Map<String, Object>) new Yaml().load(IOUtils.toString(fis, "UTF-8"));
-            ret.put("schema.registry.url", registryURL);
+            if(registryURL != null) {
+                ret.put("schema.registry.url", registryURL);
+            }
             return ret;
         } catch(Exception e) {
             throw new RuntimeException("Failed to export schema client configuration for yaml : " + schemaRegistryTestConfiguration.getClientYAMLPath(), e);

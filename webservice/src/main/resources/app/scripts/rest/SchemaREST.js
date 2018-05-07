@@ -15,6 +15,7 @@
 import fetch from 'isomorphic-fetch';
 import {baseUrl} from '../utils/Constants';
 import {CustomFetch} from '../utils/Overrides';
+import {checkStatus} from '../utils/Utils';
 
 const SchemaREST = {
   postSchema(options) {
@@ -27,9 +28,7 @@ const SchemaREST = {
     };
     options.credentials = 'same-origin';
     return fetch(baseUrl + 'schemaregistry/schemas', options)
-      .then((response) => {
-        return response.json();
-      });
+      .then(checkStatus);
   },
   getAllSchemas(sortBy, options) {
     options = options || {};
@@ -43,6 +42,14 @@ const SchemaREST = {
       .then((response) => {
         return response.json();
       });
+  },
+  getAggregatedSchema(schemaName, options) {
+    options = options || {};
+    options.method = options.method || 'GET';
+    options.credentials = 'same-origin';
+    let url = baseUrl + `schemaregistry/schemas/${schemaName}/aggregated`;
+    return fetch(url, options)
+      .then(checkStatus);
   },
   getAggregatedSchemas(sortBy, options) {
     options = options || {};
@@ -69,9 +76,7 @@ const SchemaREST = {
     params.push('name='+searchStr);
     url += params.join('&');
     return fetch(url, options)
-      .then((response) => {
-        return response.json();
-      });
+      .then(checkStatus);
   },
   getSchemaInfo(name, options) {
     options = options || {};
@@ -103,7 +108,7 @@ const SchemaREST = {
         return response.json();
       });
   },
-  postVersion(name, options) {
+  postVersion(name, options, branchName) {
     options = options || {};
     options.method = options.method || 'POST';
     options.headers = options.headers || {
@@ -112,7 +117,8 @@ const SchemaREST = {
     };
     options.credentials = 'same-origin';
     name = encodeURIComponent(name);
-    return fetch(baseUrl + 'schemaregistry/schemas/' + name + '/versions', options)
+    branchName = branchName || 'MASTER';
+    return fetch(baseUrl + 'schemaregistry/schemas/' + name + '/versions?branch='+branchName, options)
       .then((response) => {
         return response.json();
       });
@@ -122,9 +128,7 @@ const SchemaREST = {
     options.method = options.method || 'GET';
     options.credentials = 'same-origin';
     return fetch(baseUrl + 'schemaregistry/schemaproviders', options)
-      .then((response) => {
-        return response.json();
-      });
+      .then(checkStatus);
   },
   getCompatibility(name, options) {
     options = options || {};
@@ -136,18 +140,14 @@ const SchemaREST = {
     options.credentials = 'same-origin';
     name = encodeURIComponent(name);
     return fetch(baseUrl+'schemaregistry/schemas/'+name+'/compatibility', options)
-      .then( (response) => {
-        return response.json();
-      });
+      .then(checkStatus);
   },
   getSchemaVersionStateMachine(options) {
     options = options || {};
     options.method = options.method || 'GET';
     options.credentials = 'same-origin';
     return fetch(baseUrl + 'schemaregistry/schemas/versions/statemachine', options)
-      .then((response) => {
-        return response.json();
-      });
+      .then(checkStatus);
   },
   changeStateOfVersion(verId, stateId, options){
     options = options || {};
@@ -158,8 +158,48 @@ const SchemaREST = {
     };
     options.credentials = 'same-origin';
     return fetch(baseUrl + 'schemaregistry/schemas/versions/'+verId+'/state/'+stateId, options)
-      .then((response) => {
-        return response.json();
+      .then(checkStatus);
+  },
+  getBranches(schemaName, options) {
+    options = options || {};
+    options.method = options.method || 'GET';
+    options.credentials = 'same-origin';
+    return fetch(baseUrl + `schemaregistry/schemas/${schemaName}/branches`, options)
+      .then(checkStatus);
+  },
+  forkNewBranch(verId, options){
+    options = options || {};
+    options.method = options.method || 'POST';
+    options.headers = options.headers || {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    options.credentials = 'same-origin';
+    return fetch(baseUrl + `schemaregistry/schemas/versionsById/${verId}/branch`, options)
+      .then(checkStatus);
+  },
+  mergeBranch(verId, options){
+    options = options || {};
+    options.method = options.method || 'POST';
+    options.headers = options.headers || {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    options.credentials = 'same-origin';
+    return fetch(baseUrl + `schemaregistry/schemas/${verId}/merge`, options)
+      .then(checkStatus);
+  },
+  deleteBranch(branchId, options){
+    options = options || {};
+    options.method = options.method || 'DELETE';
+    options.headers = options.headers || {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    options.credentials = 'same-origin';
+    return fetch(baseUrl + `schemaregistry/schemas/branch/${branchId}`, options)
+      .then((res) => {
+        return checkStatus(res, 'DELETE');
       });
   }
 };

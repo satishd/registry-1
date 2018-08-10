@@ -16,9 +16,9 @@
 
 package com.hortonworks.registries.cache.view.service;
 
+import com.hortonworks.registries.cache.Cache;
 import com.hortonworks.registries.cache.view.config.ExpiryPolicy;
 import com.hortonworks.registries.cache.view.config.TypeConfig;
-import com.hortonworks.registries.cache.Cache;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

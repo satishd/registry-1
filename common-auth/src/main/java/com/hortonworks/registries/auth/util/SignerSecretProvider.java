@@ -13,8 +13,8 @@
  */
 package com.hortonworks.registries.auth.util;
 
-import java.util.Properties;
 import javax.servlet.ServletContext;
+import java.util.Properties;
 
 /**
  * The SignerSecretProvider is an abstract way to provide a secret to be used

@@ -21,9 +21,9 @@ import com.hortonworks.registries.cache.view.DataStoreBackedCache;
 import com.hortonworks.registries.cache.view.config.TypeConfig;
 import com.hortonworks.registries.cache.view.datastore.DataStoreReader;
 import com.hortonworks.registries.cache.view.datastore.DataStoreWriter;
+import com.hortonworks.registries.cache.view.io.loader.CacheLoader;
 import com.hortonworks.registries.cache.view.io.loader.CacheLoaderFactory;
 import com.hortonworks.registries.cache.view.io.writer.CacheWriter;
-import com.hortonworks.registries.cache.view.io.loader.CacheLoader;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

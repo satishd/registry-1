@@ -17,9 +17,6 @@
  */
 package com.hortonworks.registries.schemaregistry.serdes.avro;
 
-import static com.hortonworks.registries.schemaregistry.serdes.avro.AbstractAvroSerDesProtocolHandler.READER_SCHEMA;
-import static com.hortonworks.registries.schemaregistry.serdes.avro.AbstractAvroSerDesProtocolHandler.WRITER_SCHEMA;
-
 import com.hortonworks.registries.schemaregistry.SchemaIdVersion;
 import com.hortonworks.registries.schemaregistry.SchemaMetadata;
 import com.hortonworks.registries.schemaregistry.SchemaVersionInfo;
@@ -40,6 +37,9 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.hortonworks.registries.schemaregistry.serdes.avro.AbstractAvroSerDesProtocolHandler.READER_SCHEMA;
+import static com.hortonworks.registries.schemaregistry.serdes.avro.AbstractAvroSerDesProtocolHandler.WRITER_SCHEMA;
 
 /**
  * This class implements most of the required functionality for an avro deserializer by extending {@link AbstractSnapshotDeserializer}

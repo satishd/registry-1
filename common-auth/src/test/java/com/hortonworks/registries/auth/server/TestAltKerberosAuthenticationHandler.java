@@ -13,16 +13,16 @@
  */
 package com.hortonworks.registries.auth.server;
 
-import java.io.IOException;
-import java.util.Properties;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import com.hortonworks.registries.auth.client.AuthenticationException;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Properties;
 
 @Ignore
 public class TestAltKerberosAuthenticationHandler

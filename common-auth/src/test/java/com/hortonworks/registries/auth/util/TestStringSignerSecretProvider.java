@@ -13,11 +13,11 @@
  */
 package com.hortonworks.registries.auth.util;
 
-import java.util.Properties;
-
 import com.hortonworks.registries.auth.server.AuthenticationFilter;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Properties;
 
 public class TestStringSignerSecretProvider {
 

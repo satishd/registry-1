@@ -17,10 +17,10 @@
 package com.hortonworks.registries.storage.impl.jdbc.mysql;
 
 import com.hortonworks.registries.common.test.IntegrationTest;
-import com.hortonworks.registries.storage.impl.jdbc.connection.ConnectionBuilder;
 import com.hortonworks.registries.storage.impl.jdbc.JdbcStorageManagerIntegrationTest;
 import com.hortonworks.registries.storage.impl.jdbc.config.ExecutionConfig;
 import com.hortonworks.registries.storage.impl.jdbc.config.HikariBasicConfig;
+import com.hortonworks.registries.storage.impl.jdbc.connection.ConnectionBuilder;
 import com.hortonworks.registries.storage.impl.jdbc.connection.HikariCPConnectionBuilder;
 import com.hortonworks.registries.storage.impl.jdbc.provider.mysql.factory.MySqlExecutor;
 import org.junit.After;

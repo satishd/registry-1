@@ -29,7 +29,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.hortonworks.registries.schemaregistry.SchemaBranch;
 import com.hortonworks.registries.schemaregistry.SchemaBranchKey;
 import com.hortonworks.registries.schemaregistry.errors.SchemaBranchNotFoundException;
-import com.hortonworks.registries.schemaregistry.utils.ObjectMapperUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

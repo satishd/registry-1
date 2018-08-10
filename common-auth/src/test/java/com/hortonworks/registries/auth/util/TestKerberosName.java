@@ -14,14 +14,11 @@
 package com.hortonworks.registries.auth.util;
 
 
-import java.io.IOException;
-
 import com.hortonworks.registries.auth.KerberosTestUtils;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.junit.Assert;
 
 public class TestKerberosName {
 

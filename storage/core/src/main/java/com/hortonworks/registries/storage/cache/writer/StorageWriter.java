@@ -16,8 +16,8 @@
 
 package com.hortonworks.registries.storage.cache.writer;
 
-import com.hortonworks.registries.storage.StorableKey;
 import com.hortonworks.registries.storage.Storable;
+import com.hortonworks.registries.storage.StorableKey;
 
 
 public interface StorageWriter {

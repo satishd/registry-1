@@ -15,17 +15,17 @@
  **/
 package com.hortonworks.registries.schemaregistry.webservice;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.net.URI;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
-
 import com.google.common.base.Preconditions;
 import com.hortonworks.registries.common.ha.LeadershipParticipant;
 import com.hortonworks.registries.schemaregistry.ISchemaRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 abstract class BaseRegistryResource {
 

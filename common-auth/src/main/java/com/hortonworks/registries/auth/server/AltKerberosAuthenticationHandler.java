@@ -13,14 +13,14 @@
  */
 package com.hortonworks.registries.auth.server;
 
-import java.io.IOException;
-import java.util.Locale;
-import java.util.Properties;
+import com.hortonworks.registries.auth.client.AuthenticationException;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.hortonworks.registries.auth.client.AuthenticationException;
+import java.io.IOException;
+import java.util.Locale;
+import java.util.Properties;
 
 /**
  * The {@link AltKerberosAuthenticationHandler} behaves exactly the same way as

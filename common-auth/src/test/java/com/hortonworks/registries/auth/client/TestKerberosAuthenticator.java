@@ -13,18 +13,17 @@
  */
 package com.hortonworks.registries.auth.client;
 
-import org.apache.hadoop.minikdc.KerberosSecurityTestcase;
 import com.hortonworks.registries.auth.KerberosTestUtils;
 import com.hortonworks.registries.auth.server.AuthenticationFilter;
-import com.hortonworks.registries.auth.server.PseudoAuthenticationHandler;
 import com.hortonworks.registries.auth.server.KerberosAuthenticationHandler;
+import com.hortonworks.registries.auth.server.PseudoAuthenticationHandler;
+import org.apache.hadoop.minikdc.KerberosSecurityTestcase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import org.junit.runner.RunWith;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.net.HttpURLConnection;

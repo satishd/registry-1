@@ -20,7 +20,6 @@ import org.mockito.Mockito;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.util.Properties;
 
 public class TestPseudoAuthenticationHandler {

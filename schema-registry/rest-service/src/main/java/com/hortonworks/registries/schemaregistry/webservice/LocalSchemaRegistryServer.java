@@ -15,10 +15,10 @@
  **/
 package com.hortonworks.registries.schemaregistry.webservice;
 
-import io.dropwizard.lifecycle.ServerLifecycleListener;
-import io.dropwizard.setup.Environment;
 import com.hortonworks.registries.webservice.RegistryApplication;
 import com.hortonworks.registries.webservice.RegistryConfiguration;
+import io.dropwizard.lifecycle.ServerLifecycleListener;
+import io.dropwizard.setup.Environment;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.slf4j.Logger;

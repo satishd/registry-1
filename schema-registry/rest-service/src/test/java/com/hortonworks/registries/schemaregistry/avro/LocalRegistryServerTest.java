@@ -15,13 +15,13 @@
  **/
 package com.hortonworks.registries.schemaregistry.avro;
 
-import com.hortonworks.registries.schemaregistry.avro.conf.SchemaRegistryTestConfiguration;
-import com.hortonworks.registries.schemaregistry.avro.conf.SchemaRegistryTestProfileType;
-import com.hortonworks.registries.schemaregistry.avro.util.CustomParameterizedRunner;
-import com.hortonworks.registries.schemaregistry.avro.helper.SchemaRegistryTestServerClientWrapper;
 import com.hortonworks.registries.schemaregistry.SchemaIdVersion;
 import com.hortonworks.registries.schemaregistry.SchemaMetadata;
 import com.hortonworks.registries.schemaregistry.SchemaVersion;
+import com.hortonworks.registries.schemaregistry.avro.conf.SchemaRegistryTestConfiguration;
+import com.hortonworks.registries.schemaregistry.avro.conf.SchemaRegistryTestProfileType;
+import com.hortonworks.registries.schemaregistry.avro.helper.SchemaRegistryTestServerClientWrapper;
+import com.hortonworks.registries.schemaregistry.avro.util.CustomParameterizedRunner;
 import com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;

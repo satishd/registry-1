@@ -25,8 +25,8 @@ import com.hortonworks.registries.storage.StorableKey;
 import com.hortonworks.registries.storage.StorageManager;
 import com.hortonworks.registries.storage.util.StorageUtils;
 import com.hortonworks.registries.tag.Tag;
-import com.hortonworks.registries.tag.TaggedEntity;
 import com.hortonworks.registries.tag.TagStorableMapping;
+import com.hortonworks.registries.tag.TaggedEntity;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;

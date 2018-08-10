@@ -32,7 +32,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;

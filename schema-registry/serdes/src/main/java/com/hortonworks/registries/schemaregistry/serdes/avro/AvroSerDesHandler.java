@@ -15,10 +15,10 @@
  */
 package com.hortonworks.registries.schemaregistry.serdes.avro;
 
+import org.apache.avro.Schema;
+
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import org.apache.avro.Schema;
 
 /**
  * Interface for serializing and deserializing avro payloads.

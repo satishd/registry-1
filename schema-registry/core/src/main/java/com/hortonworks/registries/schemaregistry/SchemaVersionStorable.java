@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hortonworks.registries.common.Schema;
 import com.hortonworks.registries.storage.AbstractVersionedStorable;
 import com.hortonworks.registries.storage.PrimaryKey;
-import com.hortonworks.registries.storage.catalog.AbstractStorable;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -16,9 +16,9 @@
 
 package com.hortonworks.registries.cache.view.impl.redis;
 
-import com.hortonworks.registries.cache.view.config.ExpiryPolicy;
 import com.hortonworks.registries.cache.AbstractCache;
 import com.hortonworks.registries.cache.Cache;
+import com.hortonworks.registries.cache.view.config.ExpiryPolicy;
 import com.lambdaworks.redis.RedisConnection;
 
 import java.util.Collection;

@@ -16,10 +16,10 @@
 package com.hortonworks.registries.schemaregistry.serdes.avro.kafka;
 
 import com.hortonworks.registries.schemaregistry.SchemaCompatibility;
+import com.hortonworks.registries.schemaregistry.SchemaMetadata;
 import com.hortonworks.registries.schemaregistry.avro.AvroSchemaProvider;
 import com.hortonworks.registries.schemaregistry.client.ISchemaRegistryClient;
 import com.hortonworks.registries.schemaregistry.serdes.avro.AvroSnapshotSerializer;
-import com.hortonworks.registries.schemaregistry.SchemaMetadata;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.util.Map;

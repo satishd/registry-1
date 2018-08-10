@@ -17,7 +17,6 @@ package com.hortonworks.registries.schemaregistry;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hortonworks.registries.schemaregistry.state.SchemaVersionLifecycleStates;
-import com.hortonworks.registries.schemaregistry.state.details.AbstractStateDetails;
 
 import java.io.Serializable;
 

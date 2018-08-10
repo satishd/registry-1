@@ -16,9 +16,9 @@
 
 package com.hortonworks.registries.cache.view.datastore.phoenix;
 
-import com.hortonworks.registries.cache.view.datastore.DataStoreWriter;
 import com.hortonworks.registries.cache.view.datastore.AbstractDataStore;
 import com.hortonworks.registries.cache.view.datastore.DataStoreReader;
+import com.hortonworks.registries.cache.view.datastore.DataStoreWriter;
 
 import java.util.Collection;
 import java.util.Map;

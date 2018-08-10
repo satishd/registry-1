@@ -16,9 +16,8 @@ package com.hortonworks.registries.auth.server;
 import com.hortonworks.registries.auth.client.AuthenticationException;
 import com.hortonworks.registries.auth.util.AuthToken;
 
-import java.security.Principal;
-
 import javax.servlet.http.HttpServletRequest;
+import java.security.Principal;
 
 /**
  * The {@link AuthenticationToken} contains information about an authenticated

@@ -15,8 +15,8 @@
  **/
 package com.hortonworks.registries.schemaregistry.serde.pull;
 
-import com.hortonworks.registries.schemaregistry.serde.SerDesException;
 import com.hortonworks.registries.schemaregistry.Resourceable;
+import com.hortonworks.registries.schemaregistry.serde.SerDesException;
 
 /**
  * This is a pull based deserializer which deserializes the given payload and user can call {@link #hasNext()} and

@@ -15,16 +15,16 @@
  */
 package com.hortonworks.registries.schemaregistry.serdes.avro;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-
 import com.hortonworks.registries.schemaregistry.SchemaIdVersion;
 import com.hortonworks.registries.schemaregistry.serdes.avro.exceptions.AvroException;
 import com.hortonworks.registries.schemaregistry.serdes.avro.exceptions.AvroRetryableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * Confluent compatible protocol handler.

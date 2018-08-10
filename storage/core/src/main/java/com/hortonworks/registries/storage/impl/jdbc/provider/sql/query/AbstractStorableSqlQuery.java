@@ -15,8 +15,8 @@
  **/
 package com.hortonworks.registries.storage.impl.jdbc.provider.sql.query;
 
-import com.hortonworks.registries.storage.StorableKey;
 import com.hortonworks.registries.storage.Storable;
+import com.hortonworks.registries.storage.StorableKey;
 
 public abstract class AbstractStorableSqlQuery extends AbstractSqlQuery {
     final Storable storable;

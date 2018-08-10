@@ -23,6 +23,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecord;
 import org.junit.Assert;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;

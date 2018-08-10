@@ -13,10 +13,10 @@
  */
 package com.hortonworks.registries.auth.util;
 
-import java.util.Random;
-
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Random;
 
 public class TestRandomSignerSecretProvider {
 

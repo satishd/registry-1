@@ -13,7 +13,10 @@
  */
 package com.hortonworks.registries.auth.util;
 
-import static com.hortonworks.registries.auth.PlatformName.IBM_JAVA;
+import org.apache.directory.server.kerberos.shared.keytab.Keytab;
+import org.apache.directory.server.kerberos.shared.keytab.KeytabEntry;
+import org.ietf.jgss.GSSException;
+import org.ietf.jgss.Oid;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,10 +32,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.directory.server.kerberos.shared.keytab.Keytab;
-import org.apache.directory.server.kerberos.shared.keytab.KeytabEntry;
-import org.ietf.jgss.GSSException;
-import org.ietf.jgss.Oid;
+import static com.hortonworks.registries.auth.PlatformName.IBM_JAVA;
 
 public class KerberosUtil {
 

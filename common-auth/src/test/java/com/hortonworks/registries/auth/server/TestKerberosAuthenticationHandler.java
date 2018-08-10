@@ -13,29 +13,28 @@
  */
 package com.hortonworks.registries.auth.server;
 
-import org.apache.hadoop.minikdc.KerberosSecurityTestcase;
 import com.hortonworks.registries.auth.KerberosTestUtils;
 import com.hortonworks.registries.auth.client.AuthenticationException;
 import com.hortonworks.registries.auth.client.KerberosAuthenticator;
-import org.apache.commons.codec.binary.Base64;
 import com.hortonworks.registries.auth.util.KerberosName;
 import com.hortonworks.registries.auth.util.KerberosUtil;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.hadoop.minikdc.KerberosSecurityTestcase;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
+import org.ietf.jgss.Oid;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.ietf.jgss.Oid;
 
 import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.File;
 import java.security.Principal;
 import java.util.Properties;

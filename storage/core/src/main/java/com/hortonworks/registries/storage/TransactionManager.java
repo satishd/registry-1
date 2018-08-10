@@ -17,7 +17,6 @@
 package com.hortonworks.registries.storage;
 
 import com.hortonworks.registries.common.transaction.TransactionIsolation;
-import com.hortonworks.registries.storage.exception.IgnoreTransactionRollbackException;
 
 public interface TransactionManager {
 

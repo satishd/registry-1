@@ -13,31 +13,27 @@
  */
 package com.hortonworks.registries.auth.server;
 
-import java.io.IOException;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.text.ParseException;
-
-import java.security.interfaces.RSAPublicKey;
-
 import com.hortonworks.registries.auth.client.AuthenticationException;
 import com.hortonworks.registries.auth.util.CertificateUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jwt.SignedJWT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.security.interfaces.RSAPublicKey;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * The {@link JWTAuthenticationHandler} implements

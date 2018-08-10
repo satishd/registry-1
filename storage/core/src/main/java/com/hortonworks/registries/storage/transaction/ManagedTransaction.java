@@ -18,9 +18,9 @@ package com.hortonworks.registries.storage.transaction;
 
 import com.hortonworks.registries.common.transaction.TransactionIsolation;
 import com.hortonworks.registries.storage.TransactionManager;
+import com.hortonworks.registries.storage.exception.IgnoreTransactionRollbackException;
 import com.hortonworks.registries.storage.transaction.functional.ManagedTransactionConsumer;
 import com.hortonworks.registries.storage.transaction.functional.ManagedTransactionFunction;
-import com.hortonworks.registries.storage.exception.IgnoreTransactionRollbackException;
 
 /**
  * Utility class for providing managed transaction to make life easier.

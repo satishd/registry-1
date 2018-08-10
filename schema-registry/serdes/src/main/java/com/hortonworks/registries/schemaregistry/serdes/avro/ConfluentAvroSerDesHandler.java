@@ -15,12 +15,6 @@
  */
 package com.hortonworks.registries.schemaregistry.serdes.avro;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.hortonworks.registries.schemaregistry.serdes.avro.exceptions.AvroException;
 import com.hortonworks.registries.schemaregistry.serdes.avro.exceptions.AvroRetryableException;
 import org.apache.avro.Schema;
@@ -36,6 +30,12 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Confluent compatible implementation of serializing and deserializing avro payloads.

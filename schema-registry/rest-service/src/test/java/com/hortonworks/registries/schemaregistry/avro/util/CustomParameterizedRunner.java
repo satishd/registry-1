@@ -222,6 +222,13 @@
 
 package com.hortonworks.registries.schemaregistry.avro.util;
 
+import org.junit.runner.Runner;
+import org.junit.runners.Suite;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.TestClass;
+import org.junit.runners.parameterized.ParametersRunnerFactory;
+import org.junit.runners.parameterized.TestWithParameters;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -233,13 +240,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import org.junit.runner.Runner;
-import org.junit.runners.Suite;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.TestClass;
-import org.junit.runners.parameterized.ParametersRunnerFactory;
-import org.junit.runners.parameterized.TestWithParameters;
 
 /**
  * The custom runner <code>Parameterized</code> implements parameterized tests.

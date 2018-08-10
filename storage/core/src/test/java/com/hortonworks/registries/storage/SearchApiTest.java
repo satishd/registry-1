@@ -18,21 +18,14 @@
 package com.hortonworks.registries.storage;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
-import com.hortonworks.registries.common.Schema;
-import com.hortonworks.registries.storage.impl.jdbc.provider.mysql.query.MySqlSelectQuery;
-import com.hortonworks.registries.storage.impl.jdbc.provider.postgresql.query.PostgresqlSelectQuery;
 import com.hortonworks.registries.storage.search.OrderBy;
 import com.hortonworks.registries.storage.search.SearchQuery;
 import com.hortonworks.registries.storage.search.WhereClause;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  *

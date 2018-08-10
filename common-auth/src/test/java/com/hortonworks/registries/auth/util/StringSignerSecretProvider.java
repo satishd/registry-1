@@ -13,11 +13,11 @@
  */
 package com.hortonworks.registries.auth.util;
 
+import com.hortonworks.registries.auth.server.AuthenticationFilter;
+
+import javax.servlet.ServletContext;
 import java.nio.charset.Charset;
 import java.util.Properties;
-import javax.servlet.ServletContext;
-
-import com.hortonworks.registries.auth.server.AuthenticationFilter;
 
 /**
  * A SignerSecretProvider that simply creates a secret based on a given String.

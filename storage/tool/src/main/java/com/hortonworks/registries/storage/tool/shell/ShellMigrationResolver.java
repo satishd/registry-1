@@ -18,6 +18,7 @@
 package com.hortonworks.registries.storage.tool.shell;
 
 import com.hortonworks.registries.storage.tool.shell.exception.ShellMigrationException;
+import org.apache.commons.io.IOUtils;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.MigrationType;
 import org.flywaydb.core.api.MigrationVersion;
@@ -30,7 +31,6 @@ import org.flywaydb.core.internal.resolver.ResolvedMigrationImpl;
 import org.flywaydb.core.internal.util.Pair;
 import org.flywaydb.core.internal.util.scanner.Resource;
 import org.flywaydb.core.internal.util.scanner.Scanner;
-import org.apache.commons.io.IOUtils;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;

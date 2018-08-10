@@ -15,10 +15,6 @@
  */
 package com.hortonworks.registries.schemaregistry.serdes.avro.kafka;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.hortonworks.registries.schemaregistry.client.ISchemaRegistryClient;
 import com.hortonworks.registries.schemaregistry.client.MockSchemaRegistryClient;
 import com.hortonworks.registries.schemaregistry.serdes.avro.AvroSnapshotDeserializer;
@@ -30,6 +26,10 @@ import org.apache.avro.generic.GenericRecordBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
